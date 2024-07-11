@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="SurrogateAttribute.Fody" Version="0.5.15" PrivateAssets="all" />
+    <PackageReference Include="SurrogateAttribute.Fody" Version="0.5.22" PrivateAssets="all" />
     <PackageReference Include="Fody" Version="6.8.1" PrivateAssets="all" />
   </ItemGroup>
 
