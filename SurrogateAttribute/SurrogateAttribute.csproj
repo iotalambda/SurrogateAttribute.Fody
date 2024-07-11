@@ -4,12 +4,12 @@
     <TargetFrameworks>net461;netstandard2.0;netstandard2.1</TargetFrameworks>
     <Authors>Joona Luoma</Authors>
     <Copyright>Copyright $([System.DateTime]::UtcNow.ToString(yyyy)).</Copyright>
-    <Description>A Fody weaver which allows to combine, reuse and create abstractions with attributes.</Description>
+    <Description>A Fody add-in that allows creating C# attributes composed of other attributes.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Attribute, ILWeaving, Fody, Cecil, AOP</PackageTags>
     <PackageOutputPath>$(SolutionDir)/Out/LocalNugetPackages</PackageOutputPath>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageVersion>0.5.26</PackageVersion>
+    <PackageVersion>0.5.27</PackageVersion>
     <RepositoryUrl>https://github.com/iotalambda/SurrogateAttribute.Fody</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/iotalambda/SurrogateAttribute.Fody/main/icon.png</PackageIconUrl>
   </PropertyGroup>

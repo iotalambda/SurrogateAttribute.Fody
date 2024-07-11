@@ -2,7 +2,8 @@
 
 ![Icon](https://raw.githubusercontent.com/iotalambda/SurrogateAttribute.Fody/main/icon.png)
 
-A Fody weaver that allows mapping attributes to any other attributes, thus making C#'s attributes a bit more useful.
+
+A Fody add-in that allows creating C# attributes composed of other attributes, thus making C#'s attributes a bit more useful.
 
 ## Installation
 
