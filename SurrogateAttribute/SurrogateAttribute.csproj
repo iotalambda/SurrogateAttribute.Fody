@@ -8,7 +8,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>Attribute, ILWeaving, Fody, Cecil, AOP</PackageTags>
     <PackageOutputPath>$(SolutionDir)/Out/LocalNugetPackages</PackageOutputPath>
-    <PackageVersion>0.5.9</PackageVersion>
+    <PackageVersion>0.5.15</PackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
