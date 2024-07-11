@@ -6,7 +6,7 @@ namespace SurrogateAttribute
     /// Sets the default value for a property of a surrogate attribute.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class PropertyDefaultValueAttribute : Attribute
+    public sealed class PropertyDefaultValueAttribute : Attribute
     {
         /// <summary>
         /// 

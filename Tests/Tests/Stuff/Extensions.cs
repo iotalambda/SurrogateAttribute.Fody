@@ -2,7 +2,7 @@
 using FluentAssertions.Types;
 using System.Reflection;
 
-namespace Tests;
+namespace Tests.Stuff;
 
 internal static class Extensions
 {

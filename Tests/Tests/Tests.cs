@@ -1,14 +1,14 @@
 using FluentAssertions;
 using Fody;
-using SurrogateAttribute.Fody;
 using TestAssembly;
+using Tests.Stuff;
 using Xunit.Abstractions;
 
 namespace Tests;
 
-public class WeaverTests(ITestOutputHelper outputHelper) : TestsBase(outputHelper)
+public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Types.Class> fodyTestResultInitializer) : TestsBase(outputHelper), IClassFixture<FodyTestResultInitializer<Types.Class>>
 {
-    static readonly TestResult tr = new ModuleWeaver().ExecuteTestRun("TestAssembly.dll");
+    readonly TestResult tr = fodyTestResultInitializer.TestResult;
 
     [Fact]
     public void Types_Ok()

@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,53 +9,76 @@ namespace SurrogateAttribute.Fody
     {
         public static bool TryGetClassInterfUsages(TypeDefinition targetTypeDef, TypeDefinition markerTypeDef, in List<Usage> usages)
         {
-            var any = false;
-            if ((targetTypeDef.IsClass || targetTypeDef.IsInterface) && targetTypeDef.HasCustomAttributes)
+            try
             {
-                foreach (var targetTypeAttr in targetTypeDef.CustomAttributes)
+                var any = false;
+                if ((targetTypeDef.IsClass || targetTypeDef.IsInterface) && targetTypeDef.HasCustomAttributes)
                 {
-                    if (!TryGetSurrogateAttrTypeDef(targetTypeAttr, markerTypeDef, out var targetTypeAttrTypeDef))
-                        continue;
-
-                    usages.Add(new ClassInterfUsage
+                    foreach (var targetTypeAttr in targetTypeDef.CustomAttributes)
                     {
-                        CustAttrProvider = targetTypeDef,
-                        Attr = targetTypeAttr,
-                        AttrTypeDef = targetTypeAttrTypeDef,
-                    });
-                    any = true;
+                        if (!TryGetSurrogateAttrTypeDef(targetTypeAttr, markerTypeDef, out var targetTypeAttrTypeDef))
+                            continue;
+
+                        usages.Add(new ClassInterfUsage
+                        {
+                            CustAttrProvider = targetTypeDef,
+                            Attr = targetTypeAttr,
+                            AttrTypeDef = targetTypeAttrTypeDef,
+                        });
+                        any = true;
+                    }
                 }
+                return any;
             }
-            return any;
+            catch (Exception e)
+            {
+                throw e.EnsureWeavingException($"An exception was thrown when trying to get class/interface surrogate attributes from the type '{targetTypeDef.Name}'.");
+            }
         }
 
         public static bool TryGetPropUsages(TypeDefinition targetTypeDef, TypeDefinition markerTypeDef, in List<Usage> usages)
         {
-            var any = false;
-            if (targetTypeDef.HasProperties)
+            try
             {
-                foreach (var targetTypePropDef in targetTypeDef.Properties)
+                var any = false;
+                if (targetTypeDef.HasProperties)
                 {
-                    if (targetTypePropDef.HasCustomAttributes)
+                    foreach (var targetTypePropDef in targetTypeDef.Properties)
                     {
-                        foreach (var targetTypePropAttr in targetTypePropDef.CustomAttributes)
+                        try
                         {
-                            if (!TryGetSurrogateAttrTypeDef(targetTypePropAttr, markerTypeDef, out var targetTypePropAttrTypeDef))
-                                continue;
-
-                            usages.Add(new PropUsage
+                            if (targetTypePropDef.HasCustomAttributes)
                             {
-                                CustAttrProvider = targetTypePropDef,
-                                Attr = targetTypePropAttr,
-                                AttrTypeDef = targetTypePropAttrTypeDef,
-                            });
+                                foreach (var targetTypePropAttr in targetTypePropDef.CustomAttributes)
+                                {
+                                    if (!TryGetSurrogateAttrTypeDef(targetTypePropAttr, markerTypeDef, out var targetTypePropAttrTypeDef))
+                                        continue;
 
-                            any = true;
+                                    usages.Add(new PropUsage
+                                    {
+                                        CustAttrProvider = targetTypePropDef,
+                                        Attr = targetTypePropAttr,
+                                        AttrTypeDef = targetTypePropAttrTypeDef,
+                                    });
+
+                                    any = true;
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            throw e.EnsureWeavingException(
+                                $"An exception was thrown when trying to get surrogate attributes from the property '{targetTypePropDef.Name}' of the type '{targetTypeDef.Name}'.",
+                                targetTypePropDef.GetMethod?.DebugInformation.SequencePoints[0]);
                         }
                     }
                 }
+                return any;
             }
-            return any;
+            catch (Exception e)
+            {
+                throw e.EnsureWeavingException($"An exception was throw when trying to get property surrogate attributes from the type '{targetTypeDef.Name}'.");
+            }
         }
 
         static bool TryGetSurrogateAttrTypeDef(CustomAttribute attr, TypeDefinition markerTypeDef, out TypeDefinition attrTypeDef)

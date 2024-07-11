@@ -1,10 +1,10 @@
 ﻿using Xunit.Abstractions;
 
-namespace Tests;
+namespace Tests.Stuff;
 
 public abstract class TestsBase(ITestOutputHelper outputHelper) : IDisposable
 {
-    private readonly TestOutputRedirection redir = new(outputHelper);
+    readonly TestOutputRedirection redir = new(outputHelper);
 
     public void Dispose() => redir.Dispose();
 }
