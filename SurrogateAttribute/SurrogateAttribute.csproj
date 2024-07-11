@@ -11,7 +11,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageVersion>0.5.25</PackageVersion>
     <RepositoryUrl>https://github.com/iotalambda/SurrogateAttribute.Fody</RepositoryUrl>
-    <PackageIconUrl>https://github.com/iotalambda/SurrogateAttribute.Fody/blob/main/icon.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/iotalambda/SurrogateAttribute.Fody/main/icon.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>

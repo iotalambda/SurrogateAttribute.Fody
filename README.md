@@ -1,8 +1,8 @@
-![Icon](icon.png)
+[![NuGet version (SurrogateAttribute.Fody)](https://img.shields.io/nuget/v/SurrogateAttribute.Fody.svg?style=flat)](https://www.nuget.org/packages/SurrogateAttribute.Fody/) [![Build, Test and Deploy to NuGet.org](https://github.com/iotalambda/SurrogateAttribute.Fody/actions/workflows/main.yml/badge.svg)](https://github.com/iotalambda/SurrogateAttribute.Fody/actions/workflows/main.yml)
+
+![Icon](https://raw.githubusercontent.com/iotalambda/SurrogateAttribute.Fody/main/icon.png)
 
 A Fody weaver that allows mapping attributes to any other attributes, thus making C#'s attributes a bit more useful.
-
-[![NuGet version (SurrogateAttribute.Fody)](https://img.shields.io/nuget/v/SurrogateAttribute.Fody.svg?style=flat)](https://www.nuget.org/packages/SurrogateAttribute.Fody/) [![Build, Test and Deploy to NuGet.org](https://github.com/iotalambda/SurrogateAttribute.Fody/actions/workflows/main.yml/badge.svg)](https://github.com/iotalambda/SurrogateAttribute.Fody/actions/workflows/main.yml)
 
 ## Installation
 
