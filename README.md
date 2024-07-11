@@ -1,6 +1,8 @@
 # SurrogateAttribute.Fody
 
-A Fody weaver which allows mapping attributes to any other attributes, thus making C#'s attributes a bit more useful.
+A Fody weaver that allows mapping attributes to any other attributes, thus making C#'s attributes a bit more useful.
+
+[![NuGet version (SurrogateAttribute.Fody)](https://img.shields.io/nuget/v/SurrogateAttribute.Fody.svg?style=flat)](https://www.nuget.org/packages/SurrogateAttribute.Fody/) [![Build, Test and Deploy to NuGet.org](https://github.com/iotalambda/SurrogateAttribute.Fody/actions/workflows/main.yml/badge.svg)](https://github.com/iotalambda/SurrogateAttribute.Fody/actions/workflows/main.yml)
 
 ## Installation
 
@@ -27,7 +29,7 @@ See [Samples](https://github.com/iotalambda/SurrogateAttribute.Fody/tree/main/Sa
 Instead of having:
 
 ```c#
-public class Cat
+class Cat
 {
     [Required(ErrorMessageResourceType = typeof(Translations), ErrorMessageResourceName = nameof(Translations.NameRequired))]
     [MinLength(3, ErrorMessageResourceType = typeof(Translations), ErrorMessageResourceName = nameof(Translations.NameBadLength))]
@@ -37,7 +39,7 @@ public class Cat
 }
 ```
 
-you can create attributes that implement `ISurrogateAttribute` and specify abstractions suitable to your requirements, e.g.
+you can create attributes that implement `ISurrogateAttribute` and have reusable abstractions suitable to your requirements, e.g.
 
 ```c#
 [AttributeUsage(AttributeTargets.Property)]
@@ -58,11 +60,7 @@ class RequiredWithLengthAttribute : Attribute, ISurrogateAttribute
         new MaxLengthAttribute(MaxLength) { ErrorMessageResourceType = TranslationResourceType, ErrorMessageResourceName = nameof(Translations.NameBadLength) },
     ];
 }
-```
 
-and:
-
-```c#
 [AttributeUsage(AttributeTargets.Property)]
 class TranslationAttribute(string translationKey) : Attribute, ISurrogateAttribute
 {
