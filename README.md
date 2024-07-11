@@ -1,4 +1,4 @@
-# SurrogateAttribute.Fody
+![Icon](icon.png)
 
 A Fody weaver that allows mapping attributes to any other attributes, thus making C#'s attributes a bit more useful.
 
