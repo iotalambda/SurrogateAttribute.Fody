@@ -9,7 +9,7 @@
     <PackageTags>Attribute, ILWeaving, Fody, Cecil, AOP</PackageTags>
     <PackageOutputPath>$(SolutionDir)/Out/LocalNugetPackages</PackageOutputPath>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageVersion>0.5.25</PackageVersion>
+    <PackageVersion>0.5.26</PackageVersion>
     <RepositoryUrl>https://github.com/iotalambda/SurrogateAttribute.Fody</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/iotalambda/SurrogateAttribute.Fody/main/icon.png</PackageIconUrl>
   </PropertyGroup>
