@@ -11,21 +11,6 @@ namespace SurrogateAttribute.Fody
     {
         public override void Execute()
         {
-            try
-            {
-                ExecuteInternal();
-            }
-            catch (Exception e)
-            {
-#if DEBUG
-                Console.WriteLine($"### EXCEPTION: {e.Message}, \r\n{e.StackTrace}");
-#endif
-                throw;
-            }
-        }
-
-        void ExecuteInternal()
-        {
             var markerTypeDef = FindTypeDefinition("SurrogateAttribute.ISurrogateAttribute");
             var markerImpls = new List<MarkerImpl>();
 
