@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAssembly.BadAttrUsage",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAssembly.BadPropDefaultValue", "Tests\TestAssembly.BadPropDefaultValue\TestAssembly.BadPropDefaultValue.csproj", "{550CFDCA-BBAD-4083-8C01-429465E3D01E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests2", "Tests\Tests2\Tests2.csproj", "{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,6 +55,10 @@ Global
 		{550CFDCA-BBAD-4083-8C01-429465E3D01E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{550CFDCA-BBAD-4083-8C01-429465E3D01E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{550CFDCA-BBAD-4083-8C01-429465E3D01E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -62,6 +68,7 @@ Global
 		{8D879261-E6F0-4284-85B7-2728A92F6FA1} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
 		{A69580AF-17C2-4183-8451-4A7C0E24CFDF} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
 		{550CFDCA-BBAD-4083-8C01-429465E3D01E} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
+		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB91C623-7D52-44EF-9B23-92D0AB079FD1}

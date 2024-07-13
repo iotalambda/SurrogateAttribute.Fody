@@ -421,6 +421,9 @@ namespace SurrogateAttribute.Fody
                     throw e.EnsureWeavingException($"An exception was thrown when processing a usage of the surrogate attribute '{usage.AttrTypeDef.Name}'.");
                 }
             }
+
+            foreach (var markerImpl in markerImpls)
+                ModuleDefinition.Types.Remove(markerImpl.TypeDef);
         }
 
         public override IEnumerable<string> GetAssembliesForScanning()

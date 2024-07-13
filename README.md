@@ -8,13 +8,18 @@ A Fody add-in that allows creating C# attributes composed of other attributes, t
 ## Installation
 
 Install [Fody](https://github.com/Fody/Fody) and SurrogateAttribute.Fody:
-
 ```powershell
-PM> Install-Package Fody
-PM> Install-Package SurrogateAttribute.Fody
+Install-Package Fody
+Install-Package SurrogateAttribute.Fody
 ```
 
-Then add `FodyWeavers.xml` file to your `.csproj` with the following content:
+And make sure both dependencies have `PrivateAssets="All"` like so:
+```xml
+<PackageReference Include="Fody" Version="???" PrivateAssets="All" />
+<PackageReference Include="SurrogateAttribute.Fody" Version="???" PrivateAssets="All" />
+```
+
+Then add `FodyWeavers.xml` file to your application project with the following content:
 ```xml
 <Weavers>
   <SurrogateAttribute />
@@ -82,7 +87,7 @@ class Cat
 }
 ```
 
-Attributes implementing `ISurrogateAttribute` are replaced with their `TargetAttributes` at build time using IL weaving.
+Attributes implementing `ISurrogateAttribute` are replaced with their `TargetAttributes` and then removed from the assembly at build time using IL weaving.
 
 ## Supported features
 TODO
