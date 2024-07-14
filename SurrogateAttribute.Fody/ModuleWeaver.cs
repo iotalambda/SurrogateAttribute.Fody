@@ -89,6 +89,9 @@ namespace SurrogateAttribute.Fody
                                     throw new KeyNotFoundException($"{nameof(membBinding.SrcKind)}:{membBinding.TgtKind}");
                             }
 
+                            if (value is TypeReference typeRef)
+                                value = usage.ModuleDef.ImportReference(typeRef);
+
                             switch (membBinding.TgtKind)
                             {
                                 case TgtKind.Property:
