@@ -13,7 +13,6 @@ namespace SurrogateAttribute.Fody
         {
             var markerTypeDef = FindTypeDefinition("SurrogateAttribute.ISurrogateAttribute");
             var markerImpls = new List<MarkerImpl>();
-
             var usages = new List<Usage>();
 
             foreach (var typeDef in ModuleDefinition.GetTypes())
@@ -31,311 +30,13 @@ namespace SurrogateAttribute.Fody
                     if (!typeDef.HasInterfaces)
                         continue;
 
-                    var markerImpl = typeDef.Interfaces.FirstOrDefault(i => i.InterfaceType.FullName == markerTypeDef.FullName);
-                    if (markerImpl == null)
+                    var markerInterf = typeDef.Interfaces.FirstOrDefault(i => i.InterfaceType.FullName == markerTypeDef.FullName);
+                    if (markerInterf == null)
                         continue;
 
-                    var tgtAttrsExprPropDef = typeDef.Properties.First(p => p.Name.Split(' ', '.').Last() == "TargetAttributes");
-                    var instrs = tgtAttrsExprPropDef.GetMethod.Body.Instructions.ToArray();
-                    var srcAttrValidTargets = GetValidAttrTargetsOrDefault(typeDef);
+                    var markerImpl = TypeDefToMarkerImpl(typeDef);
 
-                    var currMarkerImpl = new MarkerImpl { TypeDef = typeDef };
-                    markerImpls.Add(currMarkerImpl);
-                    TgtAttr currTgtAttr = null;
-                    MembBinding currMembBinding = null;
-
-                    var exp = Exp.ExprArrA;
-                    bool Expecting(Exp flags) => (exp & flags) != 0;
-#if DEBUG
-                    Console.WriteLine($"### INSTRS OF {typeDef.FullName}.{tgtAttrsExprPropDef.Name}:");
-#endif
-                    for (var ix = 0; ix < instrs.Length && exp != Exp.None; ix++)
-                    {
-                        var i = instrs[ix];
-#if DEBUG
-                        Console.WriteLine($"### {i}");
-#endif
-                        try
-                        {
-                            if (Expecting(Exp.ExprArrA))
-                            {
-                                if (i.OpCode.Code == Code.Newarr
-                                    && i.Operand is TypeReference attributeRef
-                                    && attributeRef.Name.EndsWith("Attribute"))
-                                {
-                                    ix += 2; // skip: dup, ldc.i4.0
-                                    exp = Exp.TgtAttrNewObj
-                                        | Exp.TgtCtorArgBinding_Src
-                                        | Exp.ExprArrZ;
-                                    continue;
-                                }
-                            }
-
-                            if (Expecting(Exp.ExprArrZ))
-                            {
-                                if (i.OpCode.Code == Code.Ret)
-                                {
-                                    exp = Exp.None;
-                                    continue;
-                                }
-                            }
-
-                            if (Expecting(Exp.TgtAttrNewObj))
-                            {
-                                if (i.OpCode.Code == Code.Newobj
-                                    && i.Operand is MethodReference ctorRef
-                                    && ctorRef.Name == ".ctor")
-                                {
-                                    if (currTgtAttr == null)
-                                    {
-                                        currTgtAttr = new TgtAttr();
-                                        currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                                    }
-
-                                    currTgtAttr.TypeRef = ctorRef.DeclaringType;
-                                    currTgtAttr.CtorRef = ctorRef;
-
-                                    if (srcAttrValidTargets != null)
-                                    {
-                                        var tgtAttrValidTargets = GetValidAttrTargetsOrDefault(currTgtAttr.TypeRef.Resolve());
-                                        if ((srcAttrValidTargets.Value & tgtAttrValidTargets) != srcAttrValidTargets)
-                                            throw new WeavingException($"'{currTgtAttr.TypeRef.Name}' is not compatible with the attribute targets of '{typeDef.Name}'.");
-                                    }
-
-                                    exp = Exp.TgtPropBinding_Src
-                                        | Exp.TgtAttrZ;
-                                    continue;
-                                }
-                            }
-
-                            if (Expecting(Exp.TgtAttrZ))
-                            {
-                                if (i.OpCode.Code == Code.Stelem_Ref)
-                                {
-                                    currTgtAttr = null;
-                                    ix += 2; // skip: dup, ldc.i4.0
-                                    exp = Exp.TgtAttrNewObj
-                                        | Exp.TgtCtorArgBinding_Src
-                                        | Exp.ExprArrZ;
-                                    continue;
-                                }
-                            }
-
-                            if (Expecting(Exp.TgtPropBinding_Src))
-                            {
-                                // From Field mapped from Ctor Arg
-                                if (i.OpCode.Code == Code.Ldfld
-                                    && i.Operand is FieldReference srcFieldRef)
-                                {
-                                    currMembBinding = new MembBinding
-                                    {
-                                        SrcKind = SrcKind.FieldMappedFromCtorArg,
-                                        SrcFieldRef = srcFieldRef,
-                                        TgtKind = TgtKind.CtorArg,
-                                    };
-                                    currTgtAttr.MembBindings.Add(currMembBinding);
-                                    exp = Exp.TgtPropBinding_Tgt;
-                                    continue;
-                                }
-
-                                // From Property
-                                if (i.OpCode.Code == Code.Call
-                                    && i.Operand is MethodReference srcGetterRef
-                                    && srcGetterRef.Name.StartsWith("get_"))
-                                {
-                                    var srcPropDef = srcGetterRef.DeclaringType.Resolve().Properties.First(p => p.GetMethod.FullName == srcGetterRef.FullName);
-                                    var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefault);
-                                    currMembBinding = new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Property,
-                                        SrcPropDef = srcPropDef,
-                                        SrcPropHasDefault = hasDefault,
-                                        SrcPropDefault = srcPropDefault,
-                                        TgtKind = TgtKind.Property,
-                                    };
-                                    currTgtAttr.MembBindings.Add(currMembBinding);
-                                    exp = Exp.TgtPropBinding_Tgt;
-                                    continue;
-                                }
-
-                                // From Constant Number
-                                if (IsLdcOpCode(i.OpCode))
-                                {
-                                    currMembBinding = new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Constant,
-                                        SrcConst = ValueFromLdcInstruction(i),
-                                        TgtKind = TgtKind.Property
-                                    };
-                                    currTgtAttr.MembBindings.Add(currMembBinding);
-                                    exp = Exp.TgtPropBinding_Tgt;
-                                    continue;
-                                }
-
-                                // From Constant String
-                                if (i.OpCode.Code == Code.Ldstr)
-                                {
-                                    currMembBinding = new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Constant,
-                                        SrcConst = (string)i.Operand,
-                                        TgtKind = TgtKind.Property
-                                    };
-                                    currTgtAttr.MembBindings.Add(currMembBinding);
-                                    exp = Exp.TgtPropBinding_Tgt;
-                                    continue;
-                                }
-
-                                // From Type
-                                if (i.OpCode.Code == Code.Ldtoken
-                                    && i.Operand is TypeReference srcTypeRef)
-                                {
-                                    currMembBinding = new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Constant,
-                                        SrcConst = srcTypeRef,
-                                        TgtKind = TgtKind.Property
-                                    };
-                                    currTgtAttr.MembBindings.Add(currMembBinding);
-                                    exp = Exp.TgtPropBinding_Tgt;
-                                    continue;
-                                }
-                            }
-
-                            if (Expecting(Exp.TgtPropBinding_Tgt))
-                            {
-                                if (i.OpCode.Code == Code.Callvirt
-                                    && i.Operand is MethodReference tgtSetterRef
-                                    && tgtSetterRef.Name.StartsWith("set_"))
-                                {
-                                    var tgtPropDef = tgtSetterRef.DeclaringType.Resolve().Properties.First(p => p.SetMethod != null && p.SetMethod.FullName == tgtSetterRef.FullName);
-                                    currMembBinding.TgtKind = TgtKind.Property;
-                                    currMembBinding.TgtPropDef = tgtPropDef;
-                                    currMembBinding = null;
-                                    exp = Exp.TgtPropBinding_Src
-                                        | Exp.TgtAttrZ;
-                                    continue;
-                                }
-                            }
-
-                            if (Expecting(Exp.TgtCtorArgBinding_Src))
-                            {
-                                // From Field mapped from Ctor Arg
-                                if (i.OpCode.Code == Code.Ldfld
-                                    && i.Operand is FieldReference srcFieldRef)
-                                {
-                                    if (currTgtAttr == null)
-                                    {
-                                        currTgtAttr = new TgtAttr();
-                                        currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                                    }
-
-                                    currTgtAttr.MembBindings.Add(new MembBinding
-                                    {
-                                        SrcKind = SrcKind.FieldMappedFromCtorArg,
-                                        SrcFieldRef = srcFieldRef,
-                                        TgtKind = TgtKind.CtorArg,
-                                    });
-                                    exp = Exp.TgtCtorArgBinding_Src
-                                        | Exp.TgtAttrNewObj;
-                                    continue;
-                                }
-
-                                // From Property
-                                if (i.OpCode.Code == Code.Call
-                                    && i.Operand is MethodReference srcGetterRef
-                                    && srcGetterRef.Name.StartsWith("get_"))
-                                {
-                                    if (currTgtAttr == null)
-                                    {
-                                        currTgtAttr = new TgtAttr();
-                                        currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                                    }
-
-                                    var srcPropDef = srcGetterRef.DeclaringType.Resolve().Properties.First(p => p.GetMethod.FullName == srcGetterRef.FullName);
-                                    var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefault);
-                                    currTgtAttr.MembBindings.Add(new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Property,
-                                        SrcPropDef = srcPropDef,
-                                        SrcPropHasDefault = hasDefault,
-                                        SrcPropDefault = srcPropDefault,
-                                        TgtKind = TgtKind.CtorArg,
-                                    });
-                                    exp = Exp.TgtCtorArgBinding_Src
-                                        | Exp.TgtAttrNewObj;
-                                    continue;
-                                }
-
-                                // From Constant Number
-                                if (IsLdcOpCode(i.OpCode))
-                                {
-                                    if (currTgtAttr == null)
-                                    {
-                                        currTgtAttr = new TgtAttr();
-                                        currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                                    }
-
-                                    currTgtAttr.MembBindings.Add(new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Constant,
-                                        SrcConst = ValueFromLdcInstruction(i),
-                                        TgtKind = TgtKind.CtorArg,
-                                    });
-                                    exp = Exp.TgtCtorArgBinding_Src
-                                        | Exp.TgtAttrNewObj;
-                                    continue;
-                                }
-
-                                // From Constant String
-                                if (i.OpCode.Code == Code.Ldstr)
-                                {
-                                    if (currTgtAttr == null)
-                                    {
-                                        currTgtAttr = new TgtAttr();
-                                        currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                                    }
-
-                                    currTgtAttr.MembBindings.Add(new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Constant,
-                                        SrcConst = (string)i.Operand,
-                                        TgtKind = TgtKind.CtorArg,
-                                    });
-                                    exp = Exp.TgtCtorArgBinding_Src
-                                        | Exp.TgtAttrNewObj;
-                                    continue;
-                                }
-
-                                // From Type
-                                if (i.OpCode.Code == Code.Ldtoken
-                                    && i.Operand is TypeReference srcTypeRef)
-                                {
-                                    if (currTgtAttr == null)
-                                    {
-                                        currTgtAttr = new TgtAttr();
-                                        currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                                    }
-
-                                    currTgtAttr.MembBindings.Add(new MembBinding
-                                    {
-                                        SrcKind = SrcKind.Constant,
-                                        SrcConst = srcTypeRef,
-                                        TgtKind = TgtKind.CtorArg,
-                                    });
-                                    exp = Exp.TgtCtorArgBinding_Src
-                                        | Exp.TgtAttrNewObj;
-                                    continue;
-                                }
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            throw e.EnsureWeavingException(
-                                $"An exception was thrown when processing 'TargetAttributes' of the surrogate attribute '{typeDef.Name}'.",
-                                tgtAttrsExprPropDef.GetMethod?.DebugInformation.SequencePoints[0]);
-                        }
-                    }
+                    markerImpls.Add(markerImpl);
                 }
                 catch (Exception e)
                 {
@@ -347,12 +48,20 @@ namespace SurrogateAttribute.Fody
             {
                 try
                 {
-                    var markerImpl = markerImpls.First(m => m.TypeDef == usage.AttrTypeDef);
+                    var markerImpl = markerImpls.FirstOrDefault(m => m.TypeDef == usage.AttrTypeDef);
+                    if (markerImpl == null)
+                    {
+                        markerImpl = TypeDefToMarkerImpl(usage.AttrTypeDef);
+                        if (markerImpl == null)
+                            throw new WeavingException($"Could not resolve the implementation of '{usage.AttrTypeDef.Name}'.");
+                        markerImpls.Add(markerImpl);
+                    }
+
                     usage.CustAttrProvider.CustomAttributes.Remove(usage.Attr);
 
                     foreach (var tgtAttr in markerImpl.TgtAttrs)
                     {
-                        var newAttr = new CustomAttribute(tgtAttr.CtorRef);
+                        var newAttr = new CustomAttribute(usage.ModuleDef.ImportReference(tgtAttr.CtorRef));
                         int ctorParamIx = 0;
                         foreach (var membBinding in tgtAttr.MembBindings)
                         {
@@ -387,12 +96,14 @@ namespace SurrogateAttribute.Fody
                                         value = Convert.ChangeType(value, Type.GetType(membBinding.TgtPropDef.PropertyType.FullName));
                                     newAttr.Properties.Add(new CustomAttributeNamedArgument(membBinding.TgtPropDef.Name, new CustomAttributeArgument(membBinding.TgtPropDef.PropertyType, value)));
                                     break;
+
                                 case TgtKind.CtorArg:
                                     var ctorParamDef = newAttr.Constructor.Parameters[ctorParamIx++];
                                     if (!(value is TypeReference) && ctorParamDef.ParameterType.FullName.StartsWith("System."))
                                         value = Convert.ChangeType(value, Type.GetType(ctorParamDef.ParameterType.FullName));
                                     newAttr.ConstructorArguments.Add(new CustomAttributeArgument(ctorParamDef.ParameterType, value));
                                     break;
+
                                 default:
                                     throw new KeyNotFoundException($"{nameof(membBinding.SrcKind)}:{membBinding.TgtKind}");
                             }
@@ -406,16 +117,319 @@ namespace SurrogateAttribute.Fody
                     throw e.EnsureWeavingException($"An exception was thrown when processing a usage of the surrogate attribute '{usage.AttrTypeDef.Name}'.");
                 }
             }
+        }
 
-            foreach (var markerImpl in markerImpls)
-                ModuleDefinition.Types.Remove(markerImpl.TypeDef);
+        static MarkerImpl TypeDefToMarkerImpl(TypeDefinition typeDef)
+        {
+            var tgtAttrsExprPropDef = typeDef.Properties.First(p => p.Name.Split(' ', '.').Last() == "TargetAttributes");
+            var instrs = tgtAttrsExprPropDef.GetMethod.Body.Instructions.ToArray();
+            var srcAttrValidTargets = GetValidAttrTargetsOrDefault(typeDef);
+
+            var currMarkerImpl = new MarkerImpl { TypeDef = typeDef };
+            TgtAttr currTgtAttr = null;
+            MembBinding currMembBinding = null;
+
+            var exp = Exp.ExprArrA;
+            bool Expecting(Exp flags) => (exp & flags) != 0;
+#if DEBUG
+            Console.WriteLine($"### INSTRS OF {typeDef.FullName}.{tgtAttrsExprPropDef.Name}:");
+#endif
+            for (var ix = 0; ix < instrs.Length && exp != Exp.None; ix++)
+            {
+                var i = instrs[ix];
+#if DEBUG
+                Console.WriteLine($"### {i}");
+#endif
+                try
+                {
+                    if (Expecting(Exp.ExprArrA))
+                    {
+                        if (i.OpCode.Code == Code.Newarr
+                            && i.Operand is TypeReference attributeRef
+                            && attributeRef.Name.EndsWith("Attribute"))
+                        {
+                            ix += 2; // skip: dup, ldc.i4.0
+                            exp = Exp.TgtAttrNewObj
+                                | Exp.TgtCtorArgBinding_Src
+                                | Exp.ExprArrZ;
+                            continue;
+                        }
+                    }
+
+                    if (Expecting(Exp.ExprArrZ))
+                    {
+                        if (i.OpCode.Code == Code.Ret)
+                        {
+                            exp = Exp.None;
+                            continue;
+                        }
+                    }
+
+                    if (Expecting(Exp.TgtAttrNewObj))
+                    {
+                        if (i.OpCode.Code == Code.Newobj
+                            && i.Operand is MethodReference ctorRef
+                            && ctorRef.Name == ".ctor")
+                        {
+                            if (currTgtAttr == null)
+                            {
+                                currTgtAttr = new TgtAttr();
+                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
+                            }
+
+                            currTgtAttr.TypeRef = ctorRef.DeclaringType;
+                            currTgtAttr.CtorRef = ctorRef;
+
+                            if (srcAttrValidTargets != null)
+                            {
+                                var tgtAttrValidTargets = GetValidAttrTargetsOrDefault(currTgtAttr.TypeRef.Resolve());
+                                if ((srcAttrValidTargets.Value & tgtAttrValidTargets) != srcAttrValidTargets)
+                                    throw new WeavingException($"'{currTgtAttr.TypeRef.Name}' is not compatible with the attribute targets of '{typeDef.Name}'.");
+                            }
+
+                            exp = Exp.TgtPropBinding_Src
+                                | Exp.TgtAttrZ;
+                            continue;
+                        }
+                    }
+
+                    if (Expecting(Exp.TgtAttrZ))
+                    {
+                        if (i.OpCode.Code == Code.Stelem_Ref)
+                        {
+                            currTgtAttr = null;
+                            ix += 2; // skip: dup, ldc.i4.0
+                            exp = Exp.TgtAttrNewObj
+                                | Exp.TgtCtorArgBinding_Src
+                                | Exp.ExprArrZ;
+                            continue;
+                        }
+                    }
+
+                    if (Expecting(Exp.TgtPropBinding_Src))
+                    {
+                        // From Field mapped from Ctor Arg
+                        if (i.OpCode.Code == Code.Ldfld
+                            && i.Operand is FieldReference srcFieldRef)
+                        {
+                            currMembBinding = new MembBinding
+                            {
+                                SrcKind = SrcKind.FieldMappedFromCtorArg,
+                                SrcFieldRef = srcFieldRef,
+                                TgtKind = TgtKind.CtorArg,
+                            };
+                            currTgtAttr.MembBindings.Add(currMembBinding);
+                            exp = Exp.TgtPropBinding_Tgt;
+                            continue;
+                        }
+
+                        // From Property
+                        if (i.OpCode.Code == Code.Call
+                            && i.Operand is MethodReference srcGetterRef
+                            && srcGetterRef.Name.StartsWith("get_"))
+                        {
+                            var srcPropDef = srcGetterRef.DeclaringType.Resolve().Properties.First(p => p.GetMethod.FullName == srcGetterRef.FullName);
+                            var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefault);
+                            currMembBinding = new MembBinding
+                            {
+                                SrcKind = SrcKind.Property,
+                                SrcPropDef = srcPropDef,
+                                SrcPropHasDefault = hasDefault,
+                                SrcPropDefault = srcPropDefault,
+                                TgtKind = TgtKind.Property,
+                            };
+                            currTgtAttr.MembBindings.Add(currMembBinding);
+                            exp = Exp.TgtPropBinding_Tgt;
+                            continue;
+                        }
+
+                        // From Constant Number
+                        if (IsLdcOpCode(i.OpCode))
+                        {
+                            currMembBinding = new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = ValueFromLdcInstruction(i),
+                                TgtKind = TgtKind.Property
+                            };
+                            currTgtAttr.MembBindings.Add(currMembBinding);
+                            exp = Exp.TgtPropBinding_Tgt;
+                            continue;
+                        }
+
+                        // From Constant String
+                        if (i.OpCode.Code == Code.Ldstr)
+                        {
+                            currMembBinding = new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = (string)i.Operand,
+                                TgtKind = TgtKind.Property
+                            };
+                            currTgtAttr.MembBindings.Add(currMembBinding);
+                            exp = Exp.TgtPropBinding_Tgt;
+                            continue;
+                        }
+
+                        // From Type
+                        if (i.OpCode.Code == Code.Ldtoken
+                            && i.Operand is TypeReference srcTypeRef)
+                        {
+                            currMembBinding = new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = srcTypeRef,
+                                TgtKind = TgtKind.Property
+                            };
+                            currTgtAttr.MembBindings.Add(currMembBinding);
+                            exp = Exp.TgtPropBinding_Tgt;
+                            continue;
+                        }
+                    }
+
+                    if (Expecting(Exp.TgtPropBinding_Tgt))
+                    {
+                        if (i.OpCode.Code == Code.Callvirt
+                            && i.Operand is MethodReference tgtSetterRef
+                            && tgtSetterRef.Name.StartsWith("set_"))
+                        {
+                            var tgtPropDef = tgtSetterRef.DeclaringType.Resolve().Properties.First(p => p.SetMethod != null && p.SetMethod.FullName == tgtSetterRef.FullName);
+                            currMembBinding.TgtKind = TgtKind.Property;
+                            currMembBinding.TgtPropDef = tgtPropDef;
+                            currMembBinding = null;
+                            exp = Exp.TgtPropBinding_Src
+                                | Exp.TgtAttrZ;
+                            continue;
+                        }
+                    }
+
+                    if (Expecting(Exp.TgtCtorArgBinding_Src))
+                    {
+                        // From Field mapped from Ctor Arg
+                        if (i.OpCode.Code == Code.Ldfld
+                            && i.Operand is FieldReference srcFieldRef)
+                        {
+                            if (currTgtAttr == null)
+                            {
+                                currTgtAttr = new TgtAttr();
+                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
+                            }
+
+                            currTgtAttr.MembBindings.Add(new MembBinding
+                            {
+                                SrcKind = SrcKind.FieldMappedFromCtorArg,
+                                SrcFieldRef = srcFieldRef,
+                                TgtKind = TgtKind.CtorArg,
+                            });
+                            exp = Exp.TgtCtorArgBinding_Src
+                                | Exp.TgtAttrNewObj;
+                            continue;
+                        }
+
+                        // From Property
+                        if (i.OpCode.Code == Code.Call
+                            && i.Operand is MethodReference srcGetterRef
+                            && srcGetterRef.Name.StartsWith("get_"))
+                        {
+                            if (currTgtAttr == null)
+                            {
+                                currTgtAttr = new TgtAttr();
+                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
+                            }
+
+                            var srcPropDef = srcGetterRef.DeclaringType.Resolve().Properties.First(p => p.GetMethod.FullName == srcGetterRef.FullName);
+                            var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefault);
+                            currTgtAttr.MembBindings.Add(new MembBinding
+                            {
+                                SrcKind = SrcKind.Property,
+                                SrcPropDef = srcPropDef,
+                                SrcPropHasDefault = hasDefault,
+                                SrcPropDefault = srcPropDefault,
+                                TgtKind = TgtKind.CtorArg,
+                            });
+                            exp = Exp.TgtCtorArgBinding_Src
+                                | Exp.TgtAttrNewObj;
+                            continue;
+                        }
+
+                        // From Constant Number
+                        if (IsLdcOpCode(i.OpCode))
+                        {
+                            if (currTgtAttr == null)
+                            {
+                                currTgtAttr = new TgtAttr();
+                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
+                            }
+
+                            currTgtAttr.MembBindings.Add(new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = ValueFromLdcInstruction(i),
+                                TgtKind = TgtKind.CtorArg,
+                            });
+                            exp = Exp.TgtCtorArgBinding_Src
+                                | Exp.TgtAttrNewObj;
+                            continue;
+                        }
+
+                        // From Constant String
+                        if (i.OpCode.Code == Code.Ldstr)
+                        {
+                            if (currTgtAttr == null)
+                            {
+                                currTgtAttr = new TgtAttr();
+                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
+                            }
+
+                            currTgtAttr.MembBindings.Add(new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = (string)i.Operand,
+                                TgtKind = TgtKind.CtorArg,
+                            });
+                            exp = Exp.TgtCtorArgBinding_Src
+                                | Exp.TgtAttrNewObj;
+                            continue;
+                        }
+
+                        // From Type
+                        if (i.OpCode.Code == Code.Ldtoken
+                            && i.Operand is TypeReference srcTypeRef)
+                        {
+                            if (currTgtAttr == null)
+                            {
+                                currTgtAttr = new TgtAttr();
+                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
+                            }
+
+                            currTgtAttr.MembBindings.Add(new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = srcTypeRef,
+                                TgtKind = TgtKind.CtorArg,
+                            });
+                            exp = Exp.TgtCtorArgBinding_Src
+                                | Exp.TgtAttrNewObj;
+                            continue;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    throw e.EnsureWeavingException(
+                        $"An exception was thrown when processing 'TargetAttributes' of the surrogate attribute '{typeDef.Name}'.",
+                        tgtAttrsExprPropDef.GetMethod?.DebugInformation.SequencePoints[0]);
+                }
+            }
+
+            return currMarkerImpl;
         }
 
         public override IEnumerable<string> GetAssembliesForScanning()
         {
             yield return "netstandard";
             yield return "mscorlib";
-            yield return "SurrogateAttribute";
+            yield return "SurrogateAttribute.Core";
         }
 
         public override bool ShouldCleanReference => true;

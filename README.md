@@ -7,19 +7,19 @@ A Fody add-in that allows creating C# attributes composed of other attributes, t
 
 ## Installation
 
-Install [Fody](https://github.com/Fody/Fody) and SurrogateAttribute.Fody:
+Install [Fody](https://github.com/Fody/Fody) and SurrogateAttribute.Fody to each project in which you want to _use_ surrogate attributes:
 ```powershell
 Install-Package Fody
 Install-Package SurrogateAttribute.Fody
 ```
 
-And make sure both dependencies have `PrivateAssets="All"` like so:
+And make sure both dependencies have `PrivateAssets="All"` like so, because they are only needed during build:
 ```xml
 <PackageReference Include="Fody" Version="???" PrivateAssets="All" />
 <PackageReference Include="SurrogateAttribute.Fody" Version="???" PrivateAssets="All" />
 ```
 
-Then add `FodyWeavers.xml` file to your application project with the following content:
+A `FodyWeavers.xml` file will be added automatically to the project on rebuild. If not, create the file with the following content:
 ```xml
 <Weavers>
   <SurrogateAttribute />
@@ -27,6 +27,11 @@ Then add `FodyWeavers.xml` file to your application project with the following c
 ```
 
 This includes `SurrogateAttribute` Fody add-in to the IL weaving process.
+
+In case your project (most likely a library) _has no_ surrogate attribute usages but _has_ surrogate attribute implementations, you may want to install `SurrogateAttribute.Core` instead, which has the required types for implementing surrogate attributes but does not include `Fody` as a dependency:
+```powershell
+Install-Package SurrogateAttribute.Core
+```
 
 See [Samples](https://github.com/iotalambda/SurrogateAttribute.Fody/tree/main/Samples) for a working solution.
 

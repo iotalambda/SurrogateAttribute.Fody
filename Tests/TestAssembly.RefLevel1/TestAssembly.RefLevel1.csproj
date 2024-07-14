@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\SurrogateAttribute.Fody\SurrogateAttribute.Fody.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\..\SurrogateAttribute\SurrogateAttribute.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\TestAssembly.RefLevel2\TestAssembly.RefLevel2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <WeaverFiles Include="$(SolutionDir)SurrogateAttribute.Fody\bin\$(Configuration)\netstandard2.0\SurrogateAttribute.Fody.dll" />
+  </ItemGroup>
+
+</Project>

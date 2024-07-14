@@ -23,7 +23,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAssembly.BadAttrUsage",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAssembly.BadPropDefaultValue", "Tests\TestAssembly.BadPropDefaultValue\TestAssembly.BadPropDefaultValue.csproj", "{550CFDCA-BBAD-4083-8C01-429465E3D01E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests2", "Tests\Tests2\Tests2.csproj", "{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests2", "Tests\Tests2\Tests2.csproj", "{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SurrogateAttribute.Core", "SurrogateAttribute.Core\SurrogateAttribute.Core.csproj", "{27431DFA-3FAE-454A-8913-AC8CE638312A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AF68998A-71A6-4E2C-BF7A-1D1B7B02D7D5}"
+	ProjectSection(SolutionItems) = preProject
+		Common.props = Common.props
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAssembly.RefLevel1", "Tests\TestAssembly.RefLevel1\TestAssembly.RefLevel1.csproj", "{420A493C-322D-47F2-819F-AEBCD35BF35B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAssembly.RefLevel2", "Tests\TestAssembly.RefLevel2\TestAssembly.RefLevel2.csproj", "{FA874BA6-2B11-476C-B169-742649314C00}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -59,6 +70,18 @@ Global
 		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27431DFA-3FAE-454A-8913-AC8CE638312A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27431DFA-3FAE-454A-8913-AC8CE638312A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27431DFA-3FAE-454A-8913-AC8CE638312A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27431DFA-3FAE-454A-8913-AC8CE638312A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{420A493C-322D-47F2-819F-AEBCD35BF35B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{420A493C-322D-47F2-819F-AEBCD35BF35B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{420A493C-322D-47F2-819F-AEBCD35BF35B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{420A493C-322D-47F2-819F-AEBCD35BF35B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA874BA6-2B11-476C-B169-742649314C00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA874BA6-2B11-476C-B169-742649314C00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA874BA6-2B11-476C-B169-742649314C00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA874BA6-2B11-476C-B169-742649314C00}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -69,6 +92,8 @@ Global
 		{A69580AF-17C2-4183-8451-4A7C0E24CFDF} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
 		{550CFDCA-BBAD-4083-8C01-429465E3D01E} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
 		{73D3B5FE-D858-4AD9-B734-18150E5E7BAB} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
+		{420A493C-322D-47F2-819F-AEBCD35BF35B} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
+		{FA874BA6-2B11-476C-B169-742649314C00} = {C04E0017-E4C9-46E1-A79F-1CAD4D0CAF87}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB91C623-7D52-44EF-9B23-92D0AB079FD1}

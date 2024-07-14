@@ -24,6 +24,7 @@ namespace SurrogateAttribute.Fody
                             CustAttrProvider = targetTypeDef,
                             Attr = targetTypeAttr,
                             AttrTypeDef = targetTypeAttrTypeDef,
+                            ModuleDef = targetTypeDef.Module,
                         });
                         any = true;
                     }
@@ -59,6 +60,7 @@ namespace SurrogateAttribute.Fody
                                         CustAttrProvider = targetTypePropDef,
                                         Attr = targetTypePropAttr,
                                         AttrTypeDef = targetTypePropAttrTypeDef,
+                                        ModuleDef = targetTypeDef.Module,
                                     });
 
                                     any = true;

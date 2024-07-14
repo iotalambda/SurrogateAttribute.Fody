@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\SurrogateAttribute.Fody\SurrogateAttribute.Fody.csproj" PrivateAssets="All" />
     <ProjectReference Include="..\..\SurrogateAttribute\SurrogateAttribute.csproj" PrivateAssets="All" />
+    <ProjectReference Include="..\TestAssembly.RefLevel1\TestAssembly.RefLevel1.csproj" />
   </ItemGroup>
 
   <ItemGroup>

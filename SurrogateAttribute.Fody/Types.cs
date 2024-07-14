@@ -61,6 +61,7 @@ namespace SurrogateAttribute.Fody
         public ICustomAttributeProvider CustAttrProvider { get; set; }
         public CustomAttribute Attr { get; set; }
         public TypeDefinition AttrTypeDef { get; set; }
+        public ModuleDefinition ModuleDef { get; set; }
     }
     class ClassInterfUsage : Usage { }
     class PropUsage : Usage { }
