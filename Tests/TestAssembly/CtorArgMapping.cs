@@ -17,18 +17,18 @@ public static class CtorArgMapping
         public Attribute[] TargetAttributes =>
             [new TargetAttribute(
                 PropToArg,
-                argToArg)
+                argToArgField)
             {
-                ArgToProp = argToProp
+                ArgToProp = argToPropField
             }];
 
-        string argToProp;
-        string argToArg;
+        string argToPropField;
+        string argToArgField;
 
         public SourceAttribute(string argToProp, string argToArg)
         {
-            this.argToArg = argToArg;
-            this.argToProp = argToProp;
+            argToArgField = argToArg;
+            argToPropField = argToProp;
         }
     }
 
