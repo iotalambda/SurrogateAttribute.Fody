@@ -47,7 +47,7 @@ namespace SurrogateAttribute.Fody
     {
         Property = 1,
         Constant = 2,
-        FieldMappedFromCtorArg = 3,
+        FieldMappedInCtor = 3,
     }
 
     enum TgtKind

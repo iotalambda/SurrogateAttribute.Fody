@@ -20,4 +20,11 @@ public class BadInitTests(ITestOutputHelper outputHelper) : TestsBase(outputHelp
         Assert.Throws<WeavingException>(() => new FodyTestResultInitializer<TestAssembly.BadPropDefaultValue.BadPropDefaultValue.Class>().Initialize())
             .Message.Should().Be("'PropertyDefaultValueAttribute(Int32)' does not match its property 'String Prop'.");
     }
+
+    [Fact]
+    public void BadCtorArgMapping_ThrowsWeavingEx()
+    {
+        Assert.Throws<WeavingException>(() => new FodyTestResultInitializer<TestAssembly.BadCtorArgMapping.BadCtorArgMapping.Class>().Initialize())
+            .Message.Should().Be($"Cannot use complex operations when assigning a value to 'vField' in the constructor of 'SourceAttribute'.");
+    }
 }

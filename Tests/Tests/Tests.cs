@@ -74,18 +74,43 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     }
 
     [Fact]
-    public void CtorArgMapping_Ok()
+    public void CtorMappingSources_Ok()
     {
-        var propInfo = tr.GetTypeFromAssembly<CtorArgMapping.Class>().GetProperty(nameof(CtorArgMapping.Class.ClassProp));
+        var propInfo = tr.GetTypeFromAssembly<CtorMappingSources.Class>().GetProperty(nameof(CtorMappingSources.Class.ClassProp));
         var propAttributes = propInfo.CustomAttributes.ToList();
         propAttributes.Should().SatisfyRespectively(a =>
         {
-            a.AttributeType.Should().HaveSameFullNameAs<CtorArgMapping.TargetAttribute>();
+            a.AttributeType.Should().HaveSameFullNameAs<CtorMappingSources.TargetAttribute>();
             a.ConstructorArguments.Should().SatisfyRespectively(
-                t => t.ShouldHaveTypeAndValue(typeof(string), CtorArgMapping.Values.PropToArg),
-                t => t.ShouldHaveTypeAndValue(typeof(string), CtorArgMapping.Values.ArgToArg));
+                t => t.ShouldHaveTypeAndValue(typeof(string), CtorMappingSources.Values.PropToArg),
+                t => t.ShouldHaveTypeAndValue(typeof(string), CtorMappingSources.Values.ArgToArg));
             a.NamedArguments.Should().SatisfyRespectively(
-                n => n.ShouldHaveNameTypeAndValue(nameof(CtorArgMapping.TargetAttribute.ArgToProp), typeof(string), CtorArgMapping.Values.ArgToProp)
+                n => n.ShouldHaveNameTypeAndValue(nameof(CtorMappingSources.TargetAttribute.ArgToProp), typeof(string), CtorMappingSources.Values.ArgToProp),
+                n => n.ShouldHaveNameTypeAndValue(nameof(CtorMappingSources.TargetAttribute.StrConst), typeof(string), CtorMappingSources.Values.StrConst),
+                n => n.ShouldHaveNameTypeAndValue(nameof(CtorMappingSources.TargetAttribute.StrLiteral), typeof(string), CtorMappingSources.Values.StrLiteral)
+            );
+        });
+    }
+
+    [Fact]
+    public void CtorMappingTypes_Ok()
+    {
+        var propInfo = tr.GetTypeFromAssembly<CtorMappingTypes.Class>().GetProperty(nameof(CtorMappingTypes.Class.ClassProp));
+        var propAttributes = propInfo.CustomAttributes.ToList();
+        propAttributes.Should().SatisfyRespectively(a =>
+        {
+            a.AttributeType.Should().HaveSameFullNameAs<CtorMappingTypes.TargetAttribute>();
+            a.ConstructorArguments.Should().SatisfyRespectively(
+                t => t.ShouldHaveTypeAndValue(typeof(bool), CtorMappingTypes.Values.BoolArg),
+                t => t.ShouldHaveTypeAndValue(typeof(byte), CtorMappingTypes.Values.ByteArg),
+                t => t.ShouldHaveTypeAndValue(typeof(char), CtorMappingTypes.Values.CharArg),
+                t => t.ShouldHaveTypeAndValue(typeof(double), CtorMappingTypes.Values.DoubleArg),
+                t => t.ShouldHaveTypeAndValue(typeof(CtorMappingTypes.MyEnum), (int)CtorMappingTypes.Values.EnumArg),
+                t => t.ShouldHaveTypeAndValue(typeof(float), CtorMappingTypes.Values.FloatArg),
+                t => t.ShouldHaveTypeAndValue(typeof(int), CtorMappingTypes.Values.IntArg),
+                t => t.ShouldHaveTypeAndValue(typeof(long), CtorMappingTypes.Values.LongArg),
+                t => t.ShouldHaveTypeAndValue(typeof(string), CtorMappingTypes.Values.StringArg),
+                t => t.ShouldHaveTypeAndValue(typeof(Type), CtorMappingTypes.Values.TypeArg)
             );
         });
     }

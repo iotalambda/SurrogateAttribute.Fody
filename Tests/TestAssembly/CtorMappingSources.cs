@@ -4,7 +4,7 @@ using System;
 
 namespace TestAssembly;
 
-public static class CtorArgMapping
+public static class CtorMappingSources
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class SourceAttribute : Attribute
@@ -19,16 +19,22 @@ public static class CtorArgMapping
                 PropToArg,
                 argToArgField)
             {
-                ArgToProp = argToPropField
+                ArgToProp = argToPropField,
+                StrConst = strConstField,
+                StrLiteral = strLiteralField,
             }];
 
         string argToPropField;
         string argToArgField;
+        string strConstField;
+        string strLiteralField;
 
         public SourceAttribute(string argToProp, string argToArg)
         {
             argToArgField = argToArg;
             argToPropField = argToProp;
+            strConstField = Values.StrConst;
+            strLiteralField = "5";
         }
     }
 
@@ -38,6 +44,8 @@ public static class CtorArgMapping
         public string PropToArg { get; }
         public string ArgToProp { get; set; }
         public string ArgToArg { get; }
+        public string StrConst { get; set; }
+        public string StrLiteral { get; set; }
 
         public TargetAttribute(string propToArg, string argToArg)
         {
@@ -57,5 +65,7 @@ public static class CtorArgMapping
         public const string PropToArg = "1";
         public const string ArgToProp = "2";
         public const string ArgToArg = "3";
+        public const string StrConst = "4";
+        public const string StrLiteral = "5";
     }
 }

@@ -80,9 +80,9 @@ namespace SurrogateAttribute.Fody
                                     value = membBinding.SrcConst;
                                     break;
 
-                                case SrcKind.FieldMappedFromCtorArg:
-                                    if (TryGetAttrArgMappedToField(usage.Attr, membBinding.SrcFieldRef, out var ctorArgValue))
-                                        value = ctorArgValue;
+                                case SrcKind.FieldMappedInCtor:
+                                    if (TryGetValueMappedToFieldInCtor(usage.Attr, membBinding.SrcFieldRef, out var ctorMappedValue))
+                                        value = ctorMappedValue;
                                     break;
 
                                 default:
@@ -130,8 +130,16 @@ namespace SurrogateAttribute.Fody
 
             var currMarkerImpl = new MarkerImpl { TypeDef = typeDef };
             TgtAttr currTgtAttr = null;
+            void NewCurrTgtAttrIfNull()
+            {
+                if (currTgtAttr != null)
+                    return;
+                currTgtAttr = new TgtAttr();
+                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
+            }
             MembBinding currMembBinding = null;
 
+            var skip = 0;
             var exp = Exp.ExprArrA;
             bool Expecting(Exp flags) => (exp & flags) != 0;
 
@@ -145,13 +153,19 @@ namespace SurrogateAttribute.Fody
 
                 try
                 {
+                    if (skip > 0)
+                    {
+                        skip--;
+                        continue;
+                    }
+
                     if (Expecting(Exp.ExprArrA))
                     {
                         if (i.OpCode.Code == Code.Newarr
                             && i.Operand is TypeReference attributeRef
                             && attributeRef.Name.EndsWith("Attribute"))
                         {
-                            ix += 2; // skip: dup, ldc.i4.0
+                            skip = 2; // skip: dup, ldc.i4.0
                             exp = Exp.TgtAttrNewObj
                                 | Exp.TgtCtorArgBinding_Src
                                 | Exp.ExprArrZ;
@@ -174,12 +188,7 @@ namespace SurrogateAttribute.Fody
                             && i.Operand is MethodReference ctorRef
                             && ctorRef.Name == ".ctor")
                         {
-                            if (currTgtAttr == null)
-                            {
-                                currTgtAttr = new TgtAttr();
-                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                            }
-
+                            NewCurrTgtAttrIfNull();
                             currTgtAttr.TypeRef = ctorRef.DeclaringType;
                             currTgtAttr.CtorRef = ctorRef;
 
@@ -201,7 +210,7 @@ namespace SurrogateAttribute.Fody
                         if (i.OpCode.Code == Code.Stelem_Ref)
                         {
                             currTgtAttr = null;
-                            ix += 2; // skip: dup, ldc.i4.0
+                            skip = 2; // skip: dup, ldc.i4.0
                             exp = Exp.TgtAttrNewObj
                                 | Exp.TgtCtorArgBinding_Src
                                 | Exp.ExprArrZ;
@@ -211,13 +220,13 @@ namespace SurrogateAttribute.Fody
 
                     if (Expecting(Exp.TgtPropBinding_Src))
                     {
-                        // From Field mapped from Ctor Arg
+                        // From Field mapped in Ctor
                         if (i.OpCode.Code == Code.Ldfld
                             && i.Operand is FieldReference srcFieldRef)
                         {
                             currMembBinding = new MembBinding
                             {
-                                SrcKind = SrcKind.FieldMappedFromCtorArg,
+                                SrcKind = SrcKind.FieldMappedInCtor,
                                 SrcFieldRef = srcFieldRef,
                                 TgtKind = TgtKind.CtorArg,
                             };
@@ -246,13 +255,16 @@ namespace SurrogateAttribute.Fody
                             continue;
                         }
 
-                        // From Constant Number
-                        if (IsLdcOpCode(i.OpCode))
+                        // From Constant/Literal Number
+                        if (IsLdcOpCodeInstr(i))
                         {
+                            if (IsConvOpCodeInstr(i.Next))
+                                skip = 1;
+
                             currMembBinding = new MembBinding
                             {
                                 SrcKind = SrcKind.Constant,
-                                SrcConst = ValueFromLdcInstruction(i),
+                                SrcConst = ValueFromLdcInstr(i),
                                 TgtKind = TgtKind.Property
                             };
                             currTgtAttr.MembBindings.Add(currMembBinding);
@@ -260,7 +272,7 @@ namespace SurrogateAttribute.Fody
                             continue;
                         }
 
-                        // From Constant String
+                        // From Constant/Literal String
                         if (i.OpCode.Code == Code.Ldstr)
                         {
                             currMembBinding = new MembBinding
@@ -308,19 +320,15 @@ namespace SurrogateAttribute.Fody
 
                     if (Expecting(Exp.TgtCtorArgBinding_Src))
                     {
-                        // From Field mapped from Ctor Arg
+                        // From Field mapped in Ctor
                         if (i.OpCode.Code == Code.Ldfld
                             && i.Operand is FieldReference srcFieldRef)
                         {
-                            if (currTgtAttr == null)
-                            {
-                                currTgtAttr = new TgtAttr();
-                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                            }
+                            NewCurrTgtAttrIfNull();
 
                             currTgtAttr.MembBindings.Add(new MembBinding
                             {
-                                SrcKind = SrcKind.FieldMappedFromCtorArg,
+                                SrcKind = SrcKind.FieldMappedInCtor,
                                 SrcFieldRef = srcFieldRef,
                                 TgtKind = TgtKind.CtorArg,
                             });
@@ -334,11 +342,7 @@ namespace SurrogateAttribute.Fody
                             && i.Operand is MethodReference srcGetterRef
                             && srcGetterRef.Name.StartsWith("get_"))
                         {
-                            if (currTgtAttr == null)
-                            {
-                                currTgtAttr = new TgtAttr();
-                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                            }
+                            NewCurrTgtAttrIfNull();
 
                             var srcPropDef = srcGetterRef.DeclaringType.Resolve().Properties.First(p => p.GetMethod.FullName == srcGetterRef.FullName);
                             var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefault);
@@ -355,19 +359,18 @@ namespace SurrogateAttribute.Fody
                             continue;
                         }
 
-                        // From Constant Number
-                        if (IsLdcOpCode(i.OpCode))
+                        // From Constant/Literal Number
+                        if (IsLdcOpCodeInstr(i))
                         {
-                            if (currTgtAttr == null)
-                            {
-                                currTgtAttr = new TgtAttr();
-                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                            }
+                            NewCurrTgtAttrIfNull();
+
+                            if (IsConvOpCodeInstr(i.Next))
+                                skip = 1;
 
                             currTgtAttr.MembBindings.Add(new MembBinding
                             {
                                 SrcKind = SrcKind.Constant,
-                                SrcConst = ValueFromLdcInstruction(i),
+                                SrcConst = ValueFromLdcInstr(i),
                                 TgtKind = TgtKind.CtorArg,
                             });
                             exp = Exp.TgtCtorArgBinding_Src
@@ -375,14 +378,10 @@ namespace SurrogateAttribute.Fody
                             continue;
                         }
 
-                        // From Constant String
+                        // From Constant/Literal String
                         if (i.OpCode.Code == Code.Ldstr)
                         {
-                            if (currTgtAttr == null)
-                            {
-                                currTgtAttr = new TgtAttr();
-                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                            }
+                            NewCurrTgtAttrIfNull();
 
                             currTgtAttr.MembBindings.Add(new MembBinding
                             {
@@ -399,11 +398,7 @@ namespace SurrogateAttribute.Fody
                         if (i.OpCode.Code == Code.Ldtoken
                             && i.Operand is TypeReference srcTypeRef)
                         {
-                            if (currTgtAttr == null)
-                            {
-                                currTgtAttr = new TgtAttr();
-                                currMarkerImpl.TgtAttrs.Add(currTgtAttr);
-                            }
+                            NewCurrTgtAttrIfNull();
 
                             currTgtAttr.MembBindings.Add(new MembBinding
                             {
@@ -437,8 +432,9 @@ namespace SurrogateAttribute.Fody
 
         public override bool ShouldCleanReference => true;
 
-        static bool IsLdcOpCode(OpCode opCode)
+        static bool IsLdcOpCodeInstr(Instruction instr)
         {
+            var opCode = instr.OpCode;
             return opCode.Code == Code.Ldc_I4_M1
                 || opCode.Code == Code.Ldc_I4_0
                 || opCode.Code == Code.Ldc_I4_1
@@ -456,7 +452,16 @@ namespace SurrogateAttribute.Fody
                 || opCode.Code == Code.Ldc_R8;
         }
 
-        static object ValueFromLdcInstruction(Instruction i)
+        static bool IsConvOpCodeInstr(Instruction instr)
+        {
+            var opCode = instr.OpCode;
+            return opCode.Code == Code.Conv_I1
+                || opCode.Code == Code.Conv_I2
+                || opCode.Code == Code.Conv_I4
+                || opCode.Code == Code.Conv_I8;
+        }
+
+        static object ValueFromLdcInstr(Instruction i)
         {
             switch (i.OpCode.Code)
             {
@@ -527,7 +532,7 @@ namespace SurrogateAttribute.Fody
             return false;
         }
 
-        static bool TryGetAttrArgMappedToField(CustomAttribute attr, FieldReference fieldRef, out object value)
+        static bool TryGetValueMappedToFieldInCtor(CustomAttribute attr, FieldReference fieldRef, out object value)
         {
             do
             {
@@ -536,21 +541,53 @@ namespace SurrogateAttribute.Fody
                 if (!ctorDef.HasBody)
                     break;
 
-                if (!ctorDef.HasParameters)
-                    break;
-
                 var instrs = ctorDef.Body.Instructions;
                 foreach (var i in instrs)
                 {
                     if (i.OpCode.Code == Code.Stfld
                         && i.Operand is FieldReference fieldRef2
-                        && fieldRef == fieldRef2
-                        && IsLdargOpCode(i.Previous.OpCode))
+                        && fieldRef == fieldRef2)
                     {
-                        var attrCtorArgIx = ValueFromLdargInstruction(i.Previous) - 1;
-                        var attrCtorArg = attr.ConstructorArguments.ElementAt(attrCtorArgIx);
-                        value = attrCtorArg.Value;
-                        return true;
+                        // From Ctor arg
+                        if (ctorDef.HasParameters && IsLdargOpCode(i.Previous.OpCode))
+                        {
+                            var attrCtorArgIx = ValueFromLdargInstruction(i.Previous) - 1;
+                            var attrCtorArg = attr.ConstructorArguments.ElementAt(attrCtorArgIx);
+                            value = attrCtorArg.Value;
+                            return true;
+                        }
+
+                        // From Constant/Literal Number
+                        else if (IsLdcOpCodeInstr(i.Previous))
+                        {
+                            value = ValueFromLdcInstr(i.Previous);
+                            return true;
+                        }
+                        else if (IsConvOpCodeInstr(i.Previous) && IsLdcOpCodeInstr(i.Previous.Previous))
+                        {
+                            value = ValueFromLdcInstr(i.Previous.Previous);
+                            return true;
+                        }
+
+                        // From Constant/Literal string
+                        else if (i.Previous.OpCode.Code == Code.Ldstr)
+                        {
+                            value = (string)i.Previous.Operand;
+                            return true;
+                        }
+
+                        // From Type
+                        else if (i.Previous.OpCode.Code == Code.Ldtoken
+                            && i.Previous.Operand is TypeReference srcTypeRef)
+                        {
+                            value = srcTypeRef;
+                            return true;
+                        }
+
+                        else
+                        {
+                            throw new WeavingException($"Cannot use complex operations when assigning a value to '{fieldRef.Name}' in the constructor of '{fieldRef.DeclaringType.Name}'.") { SequencePoint = ctorDef.DebugInformation.SequencePoints[0] };
+                        }
                     }
                 }
 

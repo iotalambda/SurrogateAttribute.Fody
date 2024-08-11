@@ -111,9 +111,9 @@ public static class Types
         public const float FloatProp = 1.23F;
         public const int IntArg = -1;
         public const int IntProp = 123;
-        public const long LongArg = 1;
+        public const long LongArg = 22;
         public const long LongProp = 456;
-        public const string StringArg = "";
+        public const string StringArg = "asdf";
         public const string StringProp = "Str";
         public static readonly Type TypeArg = typeof(TypeArgValue);
         public static readonly Type TypeProp = typeof(DateTime);
