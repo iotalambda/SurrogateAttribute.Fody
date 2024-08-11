@@ -1,15 +1,12 @@
 using FluentAssertions;
-using Fody;
 using TestAssembly;
 using Tests.Stuff;
 using Xunit.Abstractions;
 
 namespace Tests;
 
-public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Types.Class> fodyTestResultInitializer) : TestsBase(outputHelper), IClassFixture<FodyTestResultInitializer<Types.Class>>
+public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Types.Class> initializer) : TestsBase(outputHelper, initializer), IClassFixture<FodyTestResultInitializer<Types.Class>>
 {
-    readonly TestResult tr = fodyTestResultInitializer.TestResult;
-
     [Fact]
     public void Types_Ok()
     {

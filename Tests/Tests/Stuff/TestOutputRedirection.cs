@@ -32,11 +32,21 @@ internal class TestOutputRedirection : IDisposable
         }
     }
 
+    static bool Enabled =>
+#if DEBUG
+        true;
+#else
+        false;
+#endif
+
     readonly TextWriter original;
     readonly TestOutputWriter testOutputWriter;
 
     public TestOutputRedirection(ITestOutputHelper outputHelper)
     {
+        if (!Enabled)
+            return;
+
         testOutputWriter = new TestOutputWriter(outputHelper);
         original = Console.Out;
         Console.SetOut(testOutputWriter);
@@ -44,6 +54,9 @@ internal class TestOutputRedirection : IDisposable
 
     public void Dispose()
     {
+        if (!Enabled)
+            return;
+
         Console.SetOut(original);
         testOutputWriter.Dispose();
     }

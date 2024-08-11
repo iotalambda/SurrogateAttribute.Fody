@@ -134,15 +134,15 @@ namespace SurrogateAttribute.Fody
 
             var exp = Exp.ExprArrA;
             bool Expecting(Exp flags) => (exp & flags) != 0;
-#if DEBUG
-            Console.WriteLine($"### INSTRS OF {typeDef.FullName}.{tgtAttrsExprPropDef.Name}:");
-#endif
+
+            WriteLineIfDebug($"### INSTRS OF {typeDef.FullName}.{tgtAttrsExprPropDef.Name}:");
+
             for (var ix = 0; ix < instrs.Length && exp != Exp.None; ix++)
             {
                 var i = instrs[ix];
-#if DEBUG
-                Console.WriteLine($"### {i}");
-#endif
+
+                WriteLineIfDebug($"### {i}");
+
                 try
                 {
                     if (Expecting(Exp.ExprArrA))
@@ -572,5 +572,13 @@ namespace SurrogateAttribute.Fody
 
             return (AttributeTargets)targetsInt;
         }
+
+        static void WriteLineIfDebug(string value)
+        {
+#if DEBUG
+            Console.WriteLine(value);
+#endif
+        }
+
     }
 }
