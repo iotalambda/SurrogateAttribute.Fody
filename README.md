@@ -92,7 +92,7 @@ class Cat
 }
 ```
 
-Attributes implementing `ISurrogateAttribute` are replaced with their `TargetAttributes` and then removed from the assembly at build time using IL weaving.
+Usages of attributes that implement `ISurrogateAttribute` are replaced by their corresponding `TargetAttributes` and then removed from the assembly at build time using IL weaving.
 
 ## Supported features
 TODO
