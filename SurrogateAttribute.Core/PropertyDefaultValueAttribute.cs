@@ -41,5 +41,35 @@ namespace SurrogateAttribute
 
         /// <inheritdoc cref="PropertyDefaultValueAttribute(bool)" />
         public PropertyDefaultValueAttribute(Type value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(bool[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(byte[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(char[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(double[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(float[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(int[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(long[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(object[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(string[] value) => Value = value;
+
+        /// <inheritdoc cref="PropertyDefaultValueAttribute(bool[])" />
+        public PropertyDefaultValueAttribute(Type[] value) => Value = value;
     }
 }

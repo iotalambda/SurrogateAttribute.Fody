@@ -2,6 +2,7 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -95,15 +96,38 @@ namespace SurrogateAttribute.Fody
                             switch (membBinding.TgtKind)
                             {
                                 case TgtKind.Property:
-                                    if (!(value is TypeReference) && membBinding.TgtPropDef.PropertyType.FullName.StartsWith("System."))
+                                    if (value is TypeReference) { }
+                                    else if (value is IList arr)
+                                    {
+                                        var elType = membBinding.TgtPropDef.PropertyType.GetElementType();
+                                        var arrValue = Array.CreateInstance(typeof(CustomAttributeArgument), arr.Count);
+                                        for (var i = 0; i < arr.Count; i++)
+                                            arrValue.SetValue(new CustomAttributeArgument(elType, arr[i]), i);
+                                        value = arrValue;
+                                    }
+                                    else if (membBinding.TgtPropDef.PropertyType.FullName.StartsWith("System."))
+                                    {
                                         value = Convert.ChangeType(value, Type.GetType(membBinding.TgtPropDef.PropertyType.FullName));
+                                    }
                                     newAttr.Properties.Add(new CustomAttributeNamedArgument(membBinding.TgtPropDef.Name, new CustomAttributeArgument(membBinding.TgtPropDef.PropertyType, value)));
                                     break;
 
                                 case TgtKind.CtorArg:
                                     var ctorParamDef = newAttr.Constructor.Parameters[ctorParamIx++];
-                                    if (!(value is TypeReference) && ctorParamDef.ParameterType.FullName.StartsWith("System."))
+                                    if (value is TypeReference) { }
+                                    else if (value is IList arr)
+                                    {
+                                        var elType = ctorParamDef.ParameterType.GetElementType();
+                                        var arrValue = Array.CreateInstance(typeof(CustomAttributeArgument), arr.Count);
+                                        for (var i = 0; i < arr.Count; i++)
+                                            arrValue.SetValue(new CustomAttributeArgument(elType, arr[i]), i);
+                                        value = arrValue;
+                                    }
+                                    else if (ctorParamDef.ParameterType.FullName.StartsWith("System."))
+                                    {
                                         value = Convert.ChangeType(value, Type.GetType(ctorParamDef.ParameterType.FullName));
+                                    }
+
                                     newAttr.ConstructorArguments.Add(new CustomAttributeArgument(ctorParamDef.ParameterType, value));
                                     break;
 
@@ -256,7 +280,7 @@ namespace SurrogateAttribute.Fody
                         }
 
                         // From Constant/Literal Number
-                        if (IsLdcOpCodeInstr(i))
+                        if (IsLdcOpCodeInstr(i) && i.Next.OpCode.Code != Code.Newarr)
                         {
                             if (IsConvOpCodeInstr(i.Next))
                                 skip = 1;
@@ -286,9 +310,25 @@ namespace SurrogateAttribute.Fody
                             continue;
                         }
 
-                        // From Type
-                        if (i.OpCode.Code == Code.Ldtoken
-                            && i.Operand is TypeReference srcTypeRef)
+                        // From Literal Array
+                        if (IsLdcOpCodeInstr(i) && i.Next.OpCode.Code == Code.Newarr)
+                        {
+                            var (arr, instrsHandled) = GetLiteralArray(i.Next);
+                            skip += instrsHandled;
+
+                            currMembBinding = new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = arr,
+                                TgtKind = TgtKind.Property
+                            };
+                            currTgtAttr.MembBindings.Add(currMembBinding);
+                            exp = Exp.TgtPropBinding_Tgt;
+                            continue;
+                        }
+
+                        // From Literal Type
+                        if (i.OpCode.Code == Code.Ldtoken && i.Operand is TypeReference srcTypeRef)
                         {
                             currMembBinding = new MembBinding
                             {
@@ -360,7 +400,7 @@ namespace SurrogateAttribute.Fody
                         }
 
                         // From Constant/Literal Number
-                        if (IsLdcOpCodeInstr(i))
+                        if (IsLdcOpCodeInstr(i) && i.Next.OpCode.Code != Code.Newarr)
                         {
                             NewCurrTgtAttrIfNull();
 
@@ -394,9 +434,28 @@ namespace SurrogateAttribute.Fody
                             continue;
                         }
 
-                        // From Type
-                        if (i.OpCode.Code == Code.Ldtoken
-                            && i.Operand is TypeReference srcTypeRef)
+                        // From Literal Array
+                        if (IsLdcOpCodeInstr(i) && i.Next.OpCode.Code == Code.Newarr)
+                        {
+                            NewCurrTgtAttrIfNull();
+
+                            var (arr, instrsHandled) = GetLiteralArray(i.Next);
+                            skip += instrsHandled;
+
+                            currTgtAttr.MembBindings.Add(new MembBinding
+                            {
+                                SrcKind = SrcKind.Constant,
+                                SrcConst = arr,
+                                TgtKind = TgtKind.CtorArg,
+                            });
+
+                            exp = Exp.TgtCtorArgBinding_Src
+                                | Exp.TgtAttrNewObj;
+                            continue;
+                        }
+
+                        // From Literal Type
+                        if (i.OpCode.Code == Code.Ldtoken && i.Operand is TypeReference srcTypeRef)
                         {
                             NewCurrTgtAttrIfNull();
 
@@ -576,7 +635,7 @@ namespace SurrogateAttribute.Fody
                             return true;
                         }
 
-                        // From Type
+                        // From Literal Type
                         else if (i.Previous.OpCode.Code == Code.Ldtoken
                             && i.Previous.Operand is TypeReference srcTypeRef)
                         {
@@ -608,6 +667,103 @@ namespace SurrogateAttribute.Fody
                 return null;
 
             return (AttributeTargets)targetsInt;
+        }
+
+        static (IList Arr, int InstrsHandled) GetLiteralArray(Instruction newarrInstr)
+        {
+            var elTypeName = ((TypeReference)newarrInstr.Operand).FullName;
+            var elType = elTypeName == "System.Type" ? typeof(TypeReference) : Type.GetType(elTypeName);
+            var len = (int)ValueFromLdcInstr(newarrInstr.Previous);
+            var arr = Array.CreateInstance(elType, len);
+            var ix = 0;
+            var skip = 0;
+            var instrsHandled = 1;
+            for (var i = newarrInstr.Next; i.Next != null; i = i.Next)
+            {
+                instrsHandled++;
+
+                if (skip > 0)
+                {
+                    skip--;
+                    continue;
+                }
+
+                if (i.OpCode.Code == Code.Dup)
+                {
+                    if (IsLdcOpCodeInstr(i.Next))
+                    {
+                        skip = 1;
+                        continue;
+                    }
+                    else if (i.Next.OpCode.Code == Code.Ldtoken
+                        && i.Next.Operand is FieldReference f
+                        && f.DeclaringType.FullName == "<PrivateImplementationDetails>")
+                    {
+                        skip += 1;
+                        var arrBytes = (i.Next.Operand as FieldReference).Resolve().InitialValue;
+                        int elSize;
+                        if (elType == typeof(byte) || elType == typeof(sbyte) || elType == typeof(bool))
+                            elSize = 1;
+                        else if (elType == typeof(short) || elType == typeof(ushort) || elType == typeof(char))
+                            elSize = 2;
+                        else if (elType == typeof(int) || elType == typeof(uint) || elType == typeof(float))
+                            elSize = 4;
+                        else if (elType == typeof(long) || elType == typeof(ulong) || elType == typeof(double))
+                            elSize = 8;
+                        else if (elType == typeof(decimal))
+                            elSize = 16;
+                        else
+                            throw new Exception($"Unexpected element type '{elType}' when parsing an optimized array argument.");
+
+                        Buffer.BlockCopy(arrBytes, 0, arr, 0, len * elSize);
+                        break;
+                    }
+                    else
+                    {
+                        throw new Exception($"Unexpected OpCode '{i.Next.OpCode.Code}' when parsing an array argument.");
+                    }
+                }
+
+                object el;
+
+                // From Constant/Literal Number
+                if (IsLdcOpCodeInstr(i) && i.Next.OpCode.Code != Code.Newarr)
+                {
+                    if (IsConvOpCodeInstr(i.Next))
+                        skip += 1;
+
+                    el = ValueFromLdcInstr(i);
+                }
+
+                // From Constant/Literal String
+                else if (i.OpCode.Code == Code.Ldstr)
+                {
+                    el = (string)i.Operand;
+                }
+
+                // From Literal Type
+                else if (i.OpCode.Code == Code.Ldtoken && i.Operand is TypeReference srcTypeRef)
+                {
+                    el = srcTypeRef;
+                    skip += 1; // call System.Type System.Type::GetTypeFromHandle
+                }
+
+                else
+                {
+                    throw new Exception($"Unexpected OpCode '{i.OpCode.Code}' when parsing an array argument.");
+                }
+
+                arr.SetValue(el, ix++);
+
+                skip += 1; // stelem.ref
+
+                if (ix == len)
+                    break;
+            }
+
+            instrsHandled += skip;
+
+            return (arr, instrsHandled);
         }
 
         static void WriteLineIfDebug(string value)

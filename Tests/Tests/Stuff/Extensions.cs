@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using FluentAssertions.Types;
+using System.Collections;
 using System.Reflection;
 
 namespace Tests.Stuff;
@@ -15,8 +16,12 @@ internal static class Extensions
     public static void ShouldHaveTypeAndValue(this CustomAttributeTypedArgument t, Type propType, object propValue)
     {
         t.ArgumentType.Should().HaveSameFullNameAs(propType);
-        if (propType == typeof(Type)) t.Value.As<Type>().Should().HaveSameFullNameAs(propValue.As<Type>());
-        else t.Value.Should().Be(propValue);
+        if (propType == typeof(Type))
+            t.Value.As<Type>().Should().HaveSameFullNameAs(propValue.As<Type>());
+        else if (propType.IsAssignableTo(typeof(IList)) && t.Value is IList<CustomAttributeTypedArgument> tList && propValue is IList propList)
+            tList.Select(t => t.Value).Should().ContainInOrder(propList.Cast<object>());
+        else
+            t.Value.Should().Be(propValue);
     }
 
     public static void ShouldHaveNameTypeAndValue(this CustomAttributeNamedArgument n, string propName, Type propType, object propValue)

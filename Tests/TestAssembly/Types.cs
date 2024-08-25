@@ -15,6 +15,9 @@ public static class Types
         public Attribute[] TargetAttributes =>
             [new TargetAttribute
             (
+                [6, 5, 4],
+                ["A_arg", "B_arg", "C_arg"],
+                [typeof(short), typeof(int), typeof(long)],
                 Values.BoolArg,
                 Values.ByteArg,
                 Values.CharArg,
@@ -27,6 +30,9 @@ public static class Types
                 typeof(TypeArgValue)
             )
             {
+                ArrayIntProp = [9, 8, 7],
+                ArrayStringProp = ["A_prop", "B_prop", "C_prop"],
+                ArrayTypeProp = [typeof(ushort), typeof(uint), typeof(ulong)],
                 BoolProp = Values.BoolProp,
                 ByteProp = Values.ByteProp,
                 CharProp = Values.CharProp,
@@ -44,6 +50,9 @@ public static class Types
     public class TargetAttribute : Attribute
     {
         public TargetAttribute(
+            int[] arrayIntArg,
+            string[] arrayStringArg,
+            Type[] arrayTypeArg,
             bool boolArg,
             byte byteArg,
             char charArg,
@@ -55,6 +64,9 @@ public static class Types
             string stringArg,
             Type typeArg)
         {
+            ArrayIntArg = arrayIntArg;
+            ArrayStringArg = arrayStringArg;
+            ArrayTypeArg = arrayTypeArg;
             BoolArg = boolArg;
             ByteArg = byteArg;
             CharArg = charArg;
@@ -67,6 +79,12 @@ public static class Types
             TypeArg = typeArg;
         }
 
+        public int[] ArrayIntArg { get; set; }
+        public int[] ArrayIntProp { get; set; }
+        public string[] ArrayStringArg { get; set; }
+        public string[] ArrayStringProp { get; set; }
+        public Type[] ArrayTypeArg { get; set; }
+        public Type[] ArrayTypeProp { get; set; }
         public bool BoolArg { get; set; }
         public bool BoolProp { get; set; }
         public byte ByteArg { get; set; }
@@ -97,6 +115,12 @@ public static class Types
 
     public static class Values
     {
+        public static readonly int[] ArrayIntArg = [6, 5, 4];
+        public static readonly int[] ArrayIntProp = [9, 8, 7];
+        public static readonly string[] ArrayStringArg = ["A_arg", "B_arg", "C_arg"];
+        public static readonly string[] ArrayStringProp = ["A_prop", "B_prop", "C_prop"];
+        public static readonly Type[] ArrayTypeArg = [typeof(short), typeof(int), typeof(long)];
+        public static readonly Type[] ArrayTypeProp = [typeof(ushort), typeof(uint), typeof(ulong)];
         public const bool BoolArg = true;
         public const bool BoolProp = true;
         public const byte ByteArg = 4;

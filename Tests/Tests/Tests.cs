@@ -17,6 +17,9 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
             a.AttributeType.Should().HaveSameFullNameAs<Types.TargetAttribute>();
 
             a.ConstructorArguments.Should().SatisfyRespectively(
+                t => t.ShouldHaveTypeAndValue(typeof(int[]), Types.Values.ArrayIntArg),
+                t => t.ShouldHaveTypeAndValue(typeof(string[]), Types.Values.ArrayStringArg),
+                t => t.ShouldHaveTypeAndValue(typeof(Type[]), Types.Values.ArrayTypeArg),
                 t => t.ShouldHaveTypeAndValue(typeof(bool), Types.Values.BoolArg),
                 t => t.ShouldHaveTypeAndValue(typeof(byte), Types.Values.ByteArg),
                 t => t.ShouldHaveTypeAndValue(typeof(char), Types.Values.CharArg),
@@ -29,6 +32,9 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
                 t => t.ShouldHaveTypeAndValue(typeof(Type), Types.Values.TypeArg));
 
             a.NamedArguments.Should().SatisfyRespectively(
+                n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.ArrayIntProp), typeof(int[]), Types.Values.ArrayIntProp),
+                n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.ArrayStringProp), typeof(string[]), Types.Values.ArrayStringProp),
+                n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.ArrayTypeProp), typeof(Type[]), Types.Values.ArrayTypeProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.BoolProp), typeof(bool), Types.Values.BoolProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.ByteProp), typeof(byte), Types.Values.ByteProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.CharProp), typeof(char), Types.Values.CharProp),
