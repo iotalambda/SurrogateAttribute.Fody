@@ -14,10 +14,17 @@ public static class PropSources
 #endif
     {
         public string StringPropFromNamedArg { get; set; }
+
         [PropertyDefaultValue(Values.StringPropFromDefault)]
         public string StringPropFromDefault { get; set; }
 
+        public string[] ArrayStringPropFromNamedArg { get; set; }
+
+        [PropertyDefaultValue(["D", "E", "F"])]
+        public string[] ArrayStringPropFromDefault { get; set; }
+
         public Type TypePropFromNamedArg { get; set; }
+
         [PropertyDefaultValue(typeof(TypePropFromDefault))]
         public Type TypePropFromDefault { get; set; }
 
@@ -27,6 +34,8 @@ public static class PropSources
                 StringPropFromNamedArg = StringPropFromNamedArg,
                 StringPropFromDefault = StringPropFromDefault,
                 StringPropFromConst = Values.StringPropFromConst,
+                ArrayStringPropFromNamedArg = ArrayStringPropFromNamedArg,
+                ArrayStringPropFromDefault = ArrayStringPropFromDefault,
                 TypePropFromNamedArg = TypePropFromNamedArg,
                 TypePropFromDefault = TypePropFromDefault,
                 TypePropFromConst = typeof(TypePropFromConst),
@@ -39,12 +48,14 @@ public static class PropSources
         public string StringPropFromNamedArg { get; set; }
         public string StringPropFromDefault { get; set; }
         public string StringPropFromConst { get; set; }
+        public string[] ArrayStringPropFromNamedArg { get; set; }
+        public string[] ArrayStringPropFromDefault { get; set; }
         public Type TypePropFromNamedArg { get; set; }
         public Type TypePropFromDefault { get; set; }
         public Type TypePropFromConst { get; set; }
     }
 
-    [Source(StringPropFromNamedArg = Values.StringPropFromNamedArg, TypePropFromNamedArg = typeof(TypePropFromNamedArg))]
+    [Source(StringPropFromNamedArg = Values.StringPropFromNamedArg, ArrayStringPropFromNamedArg = ["A", "B", "C"], TypePropFromNamedArg = typeof(TypePropFromNamedArg))]
     public class Class;
 
     public static class Values
@@ -52,6 +63,8 @@ public static class PropSources
         public const string StringPropFromNamedArg = "1";
         public const string StringPropFromDefault = "2";
         public const string StringPropFromConst = "3";
+        public static readonly string[] ArrayStringPropFromNamedArg = ["A", "B", "C"];
+        public static readonly string[] ArrayStringPropFromDefault = ["D", "E", "F"];
         public static readonly Type TypePropFromNamedArg = typeof(TypePropFromNamedArg);
         public static readonly Type TypePropFromDefault = typeof(TypePropFromDefault);
         public static readonly Type TypePropFromConst = typeof(TypePropFromConst);

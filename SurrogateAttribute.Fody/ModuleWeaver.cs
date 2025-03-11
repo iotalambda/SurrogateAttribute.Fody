@@ -67,31 +67,49 @@ namespace SurrogateAttribute.Fody
                         foreach (var membBinding in tgtAttr.MembBindings)
                         {
                             object value = null;
+                            TypeReference typeRef = null;
                             switch (membBinding.SrcKind)
                             {
                                 case SrcKind.Property:
                                     var na = usage.Attr.Properties.FirstOrDefault(p => p.Name == membBinding.SrcPropDef.Name);
                                     if (na.Name != null)
+                                    {
                                         value = na.Argument.Value;
+                                        typeRef = na.Argument.Type;
+                                    }
                                     else if (membBinding.SrcPropHasDefault)
-                                        value = membBinding.SrcPropDefault;
+                                    {
+                                        value = membBinding.SrcPropDefaultValue;
+                                        typeRef = membBinding.SrcPropDefaultTypeRef;
+                                    }
                                     break;
 
                                 case SrcKind.Constant:
                                     value = membBinding.SrcConst;
+                                    typeRef = usage.ModuleDef.ImportReference(value.GetType());
                                     break;
 
                                 case SrcKind.FieldMappedInCtor:
-                                    if (TryGetValueMappedToFieldInCtor(usage.Attr, membBinding.SrcFieldRef, out var ctorMappedValue))
+                                    if (TryGetValueMappedToFieldInCtor(usage.Attr, membBinding.SrcFieldRef, usage, out var ctorMappedValue, out var ctorMappedTypeRef))
+                                    {
                                         value = ctorMappedValue;
+                                        typeRef = ctorMappedTypeRef;
+                                    }
                                     break;
 
                                 default:
                                     throw new KeyNotFoundException($"{nameof(membBinding.SrcKind)}:{membBinding.TgtKind}");
                             }
 
-                            if (value is TypeReference typeRef)
-                                value = usage.ModuleDef.ImportReference(typeRef);
+                            if (value is TypeReference typeRefValue)
+                                value = usage.ModuleDef.ImportReference(typeRefValue);
+                            else if (value is CustomAttributeArgument[] customAttrArguments)
+                            {
+                                var arr = Array.CreateInstance(Type.GetType(typeRef.FullName).GetElementType(), customAttrArguments.Length);
+                                for (var i = 0; i < customAttrArguments.Length; i++)
+                                    arr.SetValue(customAttrArguments[i].Value, i);
+                                value = arr;
+                            }
 
                             switch (membBinding.TgtKind)
                             {
@@ -99,10 +117,17 @@ namespace SurrogateAttribute.Fody
                                     if (value is TypeReference) { }
                                     else if (value is IList arr)
                                     {
-                                        var elType = membBinding.TgtPropDef.PropertyType.GetElementType();
+                                        var srcElType = typeRef.GetElementType();
+                                        var tgtElType = membBinding.TgtPropDef.PropertyType.GetElementType();
                                         var arrValue = Array.CreateInstance(typeof(CustomAttributeArgument), arr.Count);
                                         for (var i = 0; i < arr.Count; i++)
-                                            arrValue.SetValue(new CustomAttributeArgument(elType, arr[i]), i);
+                                        {
+                                            var elValue = new CustomAttributeArgument(srcElType, arr[i]);
+                                            if (srcElType.FullName != tgtElType.FullName)
+                                                if (tgtElType.FullName != typeof(Type).FullName)
+                                                    elValue = new CustomAttributeArgument(tgtElType, elValue);
+                                            arrValue.SetValue(elValue, i);
+                                        }
                                         value = arrValue;
                                     }
                                     else if (membBinding.TgtPropDef.PropertyType.FullName.StartsWith("System."))
@@ -117,10 +142,17 @@ namespace SurrogateAttribute.Fody
                                     if (value is TypeReference) { }
                                     else if (value is IList arr)
                                     {
-                                        var elType = ctorParamDef.ParameterType.GetElementType();
+                                        var srcElType = typeRef.GetElementType();
+                                        var tgtElType = ctorParamDef.ParameterType.GetElementType();
                                         var arrValue = Array.CreateInstance(typeof(CustomAttributeArgument), arr.Count);
                                         for (var i = 0; i < arr.Count; i++)
-                                            arrValue.SetValue(new CustomAttributeArgument(elType, arr[i]), i);
+                                        {
+                                            var elValue = new CustomAttributeArgument(srcElType, arr[i]);
+                                            if (srcElType.FullName != tgtElType.FullName)
+                                                if (tgtElType.FullName != typeof(Type).FullName)
+                                                    elValue = new CustomAttributeArgument(tgtElType, elValue);
+                                            arrValue.SetValue(elValue, i);
+                                        }
                                         value = arrValue;
                                     }
                                     else if (ctorParamDef.ParameterType.FullName.StartsWith("System."))
@@ -265,13 +297,14 @@ namespace SurrogateAttribute.Fody
                             && srcGetterRef.Name.StartsWith("get_"))
                         {
                             var srcPropDef = srcGetterRef.DeclaringType.Resolve().Properties.First(p => p.GetMethod.FullName == srcGetterRef.FullName);
-                            var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefault);
+                            var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefaultValue, out var srcPropDefaultTypeRef);
                             currMembBinding = new MembBinding
                             {
                                 SrcKind = SrcKind.Property,
                                 SrcPropDef = srcPropDef,
                                 SrcPropHasDefault = hasDefault,
-                                SrcPropDefault = srcPropDefault,
+                                SrcPropDefaultValue = srcPropDefaultValue,
+                                SrcPropDefaultTypeRef = srcPropDefaultTypeRef,
                                 TgtKind = TgtKind.Property,
                             };
                             currTgtAttr.MembBindings.Add(currMembBinding);
@@ -385,13 +418,14 @@ namespace SurrogateAttribute.Fody
                             NewCurrTgtAttrIfNull();
 
                             var srcPropDef = srcGetterRef.DeclaringType.Resolve().Properties.First(p => p.GetMethod.FullName == srcGetterRef.FullName);
-                            var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefault);
+                            var hasDefault = TryGetPropDefaultValue(srcPropDef, out var srcPropDefaultValue, out var srcPropDefaultTypeRef);
                             currTgtAttr.MembBindings.Add(new MembBinding
                             {
                                 SrcKind = SrcKind.Property,
                                 SrcPropDef = srcPropDef,
                                 SrcPropHasDefault = hasDefault,
-                                SrcPropDefault = srcPropDefault,
+                                SrcPropDefaultValue = srcPropDefaultValue,
+                                SrcPropDefaultTypeRef = srcPropDefaultTypeRef,
                                 TgtKind = TgtKind.CtorArg,
                             });
                             exp = Exp.TgtCtorArgBinding_Src
@@ -567,7 +601,7 @@ namespace SurrogateAttribute.Fody
             }
         }
 
-        static bool TryGetPropDefaultValue(PropertyDefinition propDef, out object value)
+        static bool TryGetPropDefaultValue(PropertyDefinition propDef, out object value, out TypeReference typeRef)
         {
             do
             {
@@ -579,19 +613,22 @@ namespace SurrogateAttribute.Fody
                     break;
 
                 var customAttrArgument = propDefaultValueAttr.ConstructorArguments[0];
-                if (propDef.PropertyType != customAttrArgument.Type)
+                if (propDef.PropertyType.FullName != customAttrArgument.Type.FullName)
                     throw new WeavingException($"'PropertyDefaultValueAttribute({customAttrArgument.Type.Name})' does not match its property '{propDef.PropertyType.Name} {propDef.Name}'.") { SequencePoint = propDef.GetMethod?.DebugInformation.SequencePoints[0] };
 
                 value = customAttrArgument.Value;
+                typeRef = customAttrArgument.Type;
+
                 return true;
             }
             while (false);
 
             value = null;
+            typeRef = null;
             return false;
         }
 
-        static bool TryGetValueMappedToFieldInCtor(CustomAttribute attr, FieldReference fieldRef, out object value)
+        static bool TryGetValueMappedToFieldInCtor(CustomAttribute attr, FieldReference fieldRef, Usage usage, out object value, out TypeReference typeRef)
         {
             do
             {
@@ -613,6 +650,7 @@ namespace SurrogateAttribute.Fody
                             var attrCtorArgIx = ValueFromLdargInstruction(i.Previous) - 1;
                             var attrCtorArg = attr.ConstructorArguments.ElementAt(attrCtorArgIx);
                             value = attrCtorArg.Value;
+                            typeRef = attrCtorArg.Type;
                             return true;
                         }
 
@@ -620,11 +658,13 @@ namespace SurrogateAttribute.Fody
                         else if (IsLdcOpCodeInstr(i.Previous))
                         {
                             value = ValueFromLdcInstr(i.Previous);
+                            typeRef = usage.ModuleDef.ImportReference(value.GetType());
                             return true;
                         }
                         else if (IsConvOpCodeInstr(i.Previous) && IsLdcOpCodeInstr(i.Previous.Previous))
                         {
                             value = ValueFromLdcInstr(i.Previous.Previous);
+                            typeRef = usage.ModuleDef.ImportReference(value.GetType());
                             return true;
                         }
 
@@ -632,6 +672,7 @@ namespace SurrogateAttribute.Fody
                         else if (i.Previous.OpCode.Code == Code.Ldstr)
                         {
                             value = (string)i.Previous.Operand;
+                            typeRef = usage.ModuleDef.ImportReference(value.GetType());
                             return true;
                         }
 
@@ -640,6 +681,7 @@ namespace SurrogateAttribute.Fody
                             && i.Previous.Operand is TypeReference srcTypeRef)
                         {
                             value = srcTypeRef;
+                            typeRef = usage.ModuleDef.ImportReference(value.GetType());
                             return true;
                         }
 
@@ -654,6 +696,7 @@ namespace SurrogateAttribute.Fody
             while (false);
 
             value = null;
+            typeRef = null;
             return false;
         }
 

@@ -35,7 +35,8 @@ namespace SurrogateAttribute.Fody
         public SrcKind SrcKind { get; set; }
         public PropertyDefinition SrcPropDef { get; set; }
         public bool SrcPropHasDefault { get; set; }
-        public object SrcPropDefault { get; set; }
+        public object SrcPropDefaultValue { get; set; }
+        public TypeReference SrcPropDefaultTypeRef { get; set; }
         public object SrcConst { get; set; }
         public FieldReference SrcFieldRef { get; set; }
 

@@ -133,6 +133,8 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromNamedArg), typeof(string), PropSources.Values.StringPropFromNamedArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromDefault), typeof(string), PropSources.Values.StringPropFromDefault),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromConst), typeof(string), PropSources.Values.StringPropFromConst),
+                n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.ArrayStringPropFromNamedArg), typeof(string[]), PropSources.Values.ArrayStringPropFromNamedArg),
+                n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.ArrayStringPropFromDefault), typeof(string[]), PropSources.Values.ArrayStringPropFromDefault),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromNamedArg), typeof(Type), PropSources.Values.TypePropFromNamedArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromDefault), typeof(Type), PropSources.Values.TypePropFromDefault),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromConst), typeof(Type), PropSources.Values.TypePropFromConst));
@@ -172,5 +174,17 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
                 a22.AttributeType.Should().HaveSameFullNameAs<Multiple.Source2Target2Attribute>();
                 a22.NamedArguments.Should().SatisfyRespectively(n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source2Target2Attribute.Source2Target2Prop), typeof(string), Multiple.Values.Source2Target2Prop));
             });
+    }
+
+    [Fact]
+    public void Covariance_Ok()
+    {
+        var classType = tr.GetTypeFromAssembly<Covariance.Class>();
+        var classAttributes = classType.CustomAttributes.ToList();
+        classAttributes.Should().SatisfyRespectively(a =>
+        {
+            a.AttributeType.Should().HaveSameFullNameAs<Covariance.TargetAttribute>();
+            a.ConstructorArguments.Should().SatisfyRespectively(t => t.ShouldHaveTypeAndValue(typeof(object[]), Covariance.Values.ArrayStringPropFromNamedArg));
+        });
     }
 }

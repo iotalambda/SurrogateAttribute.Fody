@@ -9,7 +9,7 @@ public static class Types
     [AttributeUsage(AttributeTargets.Property)]
     public class SourceAttribute : Attribute
 #if ENABLE_THIS || ENABLE_ALL
-        , SurrogateAttribute.ISurrogateAttribute
+    , SurrogateAttribute.ISurrogateAttribute
 #endif
     {
         public Attribute[] TargetAttributes =>

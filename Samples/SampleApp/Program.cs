@@ -4,15 +4,17 @@ using System.Diagnostics;
 using System.Reflection;
 
 
-var cat = new Cat { Name = "Sprinkly-winkly-sprinkles" };
+var cat = new Cat { Name = "Sprinkly-winkly-sprinkles", Utterance = "Purr" };
 var errors = Validate(cat);
-Debug.Assert(errors.Length == 2);
+Debug.Assert(errors.Length == 3);
 Debug.Assert(errors.Contains("The name does not have an appropriate length."));
 Debug.Assert(errors.Contains("Animal identifier is a required field."));
+Debug.Assert(errors.Contains("Animal must say either Meow or Woof."));
 
 
 cat.Name = "Sprinkles";
 cat.Identifier = "SPRINKLES123";
+cat.Utterance = "Meow";
 errors = Validate(cat);
 Debug.Assert(errors.Length == 0);
 
