@@ -1,4 +1,4 @@
-using FluentAssertions;
+using Shouldly;
 using TestAssembly;
 using Tests.Stuff;
 using Xunit.Abstractions;
@@ -12,11 +12,11 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var propInfo = tr.GetTypeFromAssembly<Types.Class>().GetProperty(nameof(Types.Class.ClassProp));
         var propAttributes = propInfo.CustomAttributes.ToList();
-        propAttributes.Should().SatisfyRespectively(a =>
+        propAttributes.ShouldSatisfyRespectively([a =>
         {
-            a.AttributeType.Should().HaveSameFullNameAs<Types.TargetAttribute>();
+            a.AttributeType.ShouldHaveSameFullNameAs<Types.TargetAttribute>();
 
-            a.ConstructorArguments.Should().SatisfyRespectively(
+            a.ConstructorArguments.ShouldSatisfyRespectively([
                 t => t.ShouldHaveTypeAndValue(typeof(int[]), Types.Values.ArrayIntArg),
                 t => t.ShouldHaveTypeAndValue(typeof(string[]), Types.Values.ArrayStringArg),
                 t => t.ShouldHaveTypeAndValue(typeof(Type[]), Types.Values.ArrayTypeArg),
@@ -29,9 +29,9 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
                 t => t.ShouldHaveTypeAndValue(typeof(int), Types.Values.IntArg),
                 t => t.ShouldHaveTypeAndValue(typeof(long), Types.Values.LongArg),
                 t => t.ShouldHaveTypeAndValue(typeof(string), Types.Values.StringArg),
-                t => t.ShouldHaveTypeAndValue(typeof(Type), Types.Values.TypeArg));
+                t => t.ShouldHaveTypeAndValue(typeof(Type), Types.Values.TypeArg)]);
 
-            a.NamedArguments.Should().SatisfyRespectively(
+            a.NamedArguments.ShouldSatisfyRespectively([
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.ArrayIntProp), typeof(int[]), Types.Values.ArrayIntProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.ArrayStringProp), typeof(string[]), Types.Values.ArrayStringProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.ArrayTypeProp), typeof(Type[]), Types.Values.ArrayTypeProp),
@@ -44,8 +44,8 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.IntProp), typeof(int), Types.Values.IntProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.LongProp), typeof(long), Types.Values.LongProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.StringProp), typeof(string), Types.Values.StringProp),
-                n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.TypeProp), typeof(Type), Types.Values.TypeProp));
-        });
+                n => n.ShouldHaveNameTypeAndValue(nameof(Types.TargetAttribute.TypeProp), typeof(Type), Types.Values.TypeProp)]);
+        }]);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var classType = tr.GetTypeFromAssembly<ClassInterf.Class>();
         var classAttributes = classType.CustomAttributes.ToList();
-        classAttributes.Should().SatisfyRespectively(a => a.AttributeType.Should().HaveSameFullNameAs<ClassInterf.TargetClassAttribute>());
+        classAttributes.ShouldSatisfyRespectively([a => a.AttributeType.ShouldHaveSameFullNameAs<ClassInterf.TargetClassAttribute>()]);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var interfType = tr.GetTypeFromAssembly<ClassInterf.IInterf>();
         var interfAttributes = interfType.CustomAttributes.ToList();
-        interfAttributes.Should().SatisfyRespectively(a => a.AttributeType.Should().HaveSameFullNameAs<ClassInterf.TargetInterfAttribute>());
+        interfAttributes.ShouldSatisfyRespectively([a => a.AttributeType.ShouldHaveSameFullNameAs<ClassInterf.TargetInterfAttribute>()]);
     }
 
     [Fact]
@@ -69,14 +69,14 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var classType = tr.GetTypeFromAssembly<TargetAttrInheritance.Class>();
         var classAttributes = classType.CustomAttributes.ToList();
-        classAttributes.Should().SatisfyRespectively(a =>
+        classAttributes.ShouldSatisfyRespectively([a =>
         {
-            a.AttributeType.Should().HaveSameFullNameAs<TargetAttrInheritance.TargetAttribute>();
-            a.NamedArguments.Should().SatisfyRespectively(
+            a.AttributeType.ShouldHaveSameFullNameAs<TargetAttrInheritance.TargetAttribute>();
+            a.NamedArguments.ShouldSatisfyRespectively([
                 n => n.ShouldHaveNameTypeAndValue(nameof(TargetAttrInheritance.TargetAttribute.ChildProp), typeof(string), TargetAttrInheritance.Values.ChildProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(TargetAttrInheritance.TargetBaseAttribute.VirtualProp), typeof(string), TargetAttrInheritance.Values.VirtualProp),
-                n => n.ShouldHaveNameTypeAndValue(nameof(TargetAttrInheritance.TargetBaseAttribute.BaseProp), typeof(string), TargetAttrInheritance.Values.BaseProp));
-        });
+                n => n.ShouldHaveNameTypeAndValue(nameof(TargetAttrInheritance.TargetBaseAttribute.BaseProp), typeof(string), TargetAttrInheritance.Values.BaseProp)]);
+        }]);
     }
 
     [Fact]
@@ -84,18 +84,18 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var propInfo = tr.GetTypeFromAssembly<CtorMappingSources.Class>().GetProperty(nameof(CtorMappingSources.Class.ClassProp));
         var propAttributes = propInfo.CustomAttributes.ToList();
-        propAttributes.Should().SatisfyRespectively(a =>
+        propAttributes.ShouldSatisfyRespectively([a =>
         {
-            a.AttributeType.Should().HaveSameFullNameAs<CtorMappingSources.TargetAttribute>();
-            a.ConstructorArguments.Should().SatisfyRespectively(
+            a.AttributeType.ShouldHaveSameFullNameAs<CtorMappingSources.TargetAttribute>();
+            a.ConstructorArguments.ShouldSatisfyRespectively([
                 t => t.ShouldHaveTypeAndValue(typeof(string), CtorMappingSources.Values.PropToArg),
-                t => t.ShouldHaveTypeAndValue(typeof(string), CtorMappingSources.Values.ArgToArg));
-            a.NamedArguments.Should().SatisfyRespectively(
+                t => t.ShouldHaveTypeAndValue(typeof(string), CtorMappingSources.Values.ArgToArg)]);
+            a.NamedArguments.ShouldSatisfyRespectively([
                 n => n.ShouldHaveNameTypeAndValue(nameof(CtorMappingSources.TargetAttribute.ArgToProp), typeof(string), CtorMappingSources.Values.ArgToProp),
                 n => n.ShouldHaveNameTypeAndValue(nameof(CtorMappingSources.TargetAttribute.StrConst), typeof(string), CtorMappingSources.Values.StrConst),
                 n => n.ShouldHaveNameTypeAndValue(nameof(CtorMappingSources.TargetAttribute.StrLiteral), typeof(string), CtorMappingSources.Values.StrLiteral)
-            );
-        });
+            ]);
+        }]);
     }
 
     [Fact]
@@ -103,10 +103,10 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var propInfo = tr.GetTypeFromAssembly<CtorMappingTypes.Class>().GetProperty(nameof(CtorMappingTypes.Class.ClassProp));
         var propAttributes = propInfo.CustomAttributes.ToList();
-        propAttributes.Should().SatisfyRespectively(a =>
+        propAttributes.ShouldSatisfyRespectively([a =>
         {
-            a.AttributeType.Should().HaveSameFullNameAs<CtorMappingTypes.TargetAttribute>();
-            a.ConstructorArguments.Should().SatisfyRespectively(
+            a.AttributeType.ShouldHaveSameFullNameAs<CtorMappingTypes.TargetAttribute>();
+            a.ConstructorArguments.ShouldSatisfyRespectively([
                 t => t.ShouldHaveTypeAndValue(typeof(bool), CtorMappingTypes.Values.BoolArg),
                 t => t.ShouldHaveTypeAndValue(typeof(byte), CtorMappingTypes.Values.ByteArg),
                 t => t.ShouldHaveTypeAndValue(typeof(char), CtorMappingTypes.Values.CharArg),
@@ -117,8 +117,8 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
                 t => t.ShouldHaveTypeAndValue(typeof(long), CtorMappingTypes.Values.LongArg),
                 t => t.ShouldHaveTypeAndValue(typeof(string), CtorMappingTypes.Values.StringArg),
                 t => t.ShouldHaveTypeAndValue(typeof(Type), CtorMappingTypes.Values.TypeArg)
-            );
-        });
+            ]);
+        }]);
     }
 
     [Fact]
@@ -126,10 +126,10 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var classType = tr.GetTypeFromAssembly<PropSources.Class>();
         var classAttributes = classType.CustomAttributes.ToList();
-        classAttributes.Should().SatisfyRespectively(a =>
+        classAttributes.ShouldSatisfyRespectively([a =>
         {
-            a.AttributeType.Should().HaveSameFullNameAs<PropSources.TargetAttribute>();
-            a.NamedArguments.Should().SatisfyRespectively(
+            a.AttributeType.ShouldHaveSameFullNameAs<PropSources.TargetAttribute>();
+            a.NamedArguments.ShouldSatisfyRespectively([
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromNamedArg), typeof(string), PropSources.Values.StringPropFromNamedArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromDefault), typeof(string), PropSources.Values.StringPropFromDefault),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromConst), typeof(string), PropSources.Values.StringPropFromConst),
@@ -137,8 +137,9 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.ArrayStringPropFromDefault), typeof(string[]), PropSources.Values.ArrayStringPropFromDefault),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromNamedArg), typeof(Type), PropSources.Values.TypePropFromNamedArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromDefault), typeof(Type), PropSources.Values.TypePropFromDefault),
-                n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromConst), typeof(Type), PropSources.Values.TypePropFromConst));
-        });
+                n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromConst), typeof(Type), PropSources.Values.TypePropFromConst)
+            ]);
+        }]);
     }
 
     [Fact]
@@ -146,34 +147,36 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var classType = tr.GetTypeFromAssembly<Multiple.Class>();
         var classAttributes = classType.CustomAttributes.ToList();
-        classAttributes.Should().SatisfyRespectively(
+        classAttributes.ShouldSatisfyRespectively([
             a11 =>
             {
-                a11.AttributeType.Should().HaveSameFullNameAs<Multiple.Source1Target1Attribute>();
-                a11.NamedArguments.Should().SatisfyRespectively(n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source1Target1Attribute.Source1Target1Prop), typeof(string), Multiple.Values.Source1Target1Prop));
+                a11.AttributeType.ShouldHaveSameFullNameAs<Multiple.Source1Target1Attribute>();
+                a11.NamedArguments.ShouldSatisfyRespectively([n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source1Target1Attribute.Source1Target1Prop), typeof(string), Multiple.Values.Source1Target1Prop)]);
             },
             a12 =>
             {
-                a12.AttributeType.Should().HaveSameFullNameAs<Multiple.Source1Target2Attribute>();
-                a12.NamedArguments.Should().SatisfyRespectively(
+                a12.AttributeType.ShouldHaveSameFullNameAs<Multiple.Source1Target2Attribute>();
+                a12.NamedArguments.ShouldSatisfyRespectively([
                     n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source1Target2Attribute.Source1Target2Prop1), typeof(string), Multiple.Values.Source1Target2Prop1),
-                    n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source1Target2Attribute.Source1Target2Prop2), typeof(string), Multiple.Values.Source1Target2Prop2));
+                    n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source1Target2Attribute.Source1Target2Prop2), typeof(string), Multiple.Values.Source1Target2Prop2)
+                ]);
             },
             a13 =>
             {
-                a13.AttributeType.Should().HaveSameFullNameAs<Multiple.Source1Target3Attribute>();
-                a13.NamedArguments.Should().SatisfyRespectively(n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source1Target3Attribute.Source1Target3Prop), typeof(string), Multiple.Values.Source1Target3Prop));
+                a13.AttributeType.ShouldHaveSameFullNameAs<Multiple.Source1Target3Attribute>();
+                a13.NamedArguments.ShouldSatisfyRespectively([n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source1Target3Attribute.Source1Target3Prop), typeof(string), Multiple.Values.Source1Target3Prop)]);
             },
             a21 =>
             {
-                a21.AttributeType.Should().HaveSameFullNameAs<Multiple.Source2Target1Attribute>();
-                a21.NamedArguments.Should().SatisfyRespectively(n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source2Target1Attribute.Source2Target1Prop), typeof(string), Multiple.Values.Source2Target1Prop));
+                a21.AttributeType.ShouldHaveSameFullNameAs<Multiple.Source2Target1Attribute>();
+                a21.NamedArguments.ShouldSatisfyRespectively([n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source2Target1Attribute.Source2Target1Prop), typeof(string), Multiple.Values.Source2Target1Prop)]);
             },
             a22 =>
             {
-                a22.AttributeType.Should().HaveSameFullNameAs<Multiple.Source2Target2Attribute>();
-                a22.NamedArguments.Should().SatisfyRespectively(n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source2Target2Attribute.Source2Target2Prop), typeof(string), Multiple.Values.Source2Target2Prop));
-            });
+                a22.AttributeType.ShouldHaveSameFullNameAs<Multiple.Source2Target2Attribute>();
+                a22.NamedArguments.ShouldSatisfyRespectively([n => n.ShouldHaveNameTypeAndValue(nameof(Multiple.Source2Target2Attribute.Source2Target2Prop), typeof(string), Multiple.Values.Source2Target2Prop)]);
+            }
+        ]);
     }
 
     [Fact]
@@ -181,10 +184,10 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
     {
         var classType = tr.GetTypeFromAssembly<Covariance.Class>();
         var classAttributes = classType.CustomAttributes.ToList();
-        classAttributes.Should().SatisfyRespectively(a =>
+        classAttributes.ShouldSatisfyRespectively([a =>
         {
-            a.AttributeType.Should().HaveSameFullNameAs<Covariance.TargetAttribute>();
-            a.ConstructorArguments.Should().SatisfyRespectively(t => t.ShouldHaveTypeAndValue(typeof(object[]), Covariance.Values.ArrayStringPropFromNamedArg));
-        });
+            a.AttributeType.ShouldHaveSameFullNameAs<Covariance.TargetAttribute>();
+            a.ConstructorArguments.ShouldSatisfyRespectively([t => t.ShouldHaveTypeAndValue(typeof(object[]), Covariance.Values.ArrayStringPropFromNamedArg)]);
+        }]);
     }
 }
