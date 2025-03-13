@@ -130,11 +130,14 @@ public class Tests(ITestOutputHelper outputHelper, FodyTestResultInitializer<Typ
         {
             a.AttributeType.ShouldHaveSameFullNameAs<PropSources.TargetAttribute>();
             a.NamedArguments.ShouldSatisfyRespectively([
+                n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromCtorArg), typeof(string), PropSources.Values.StringPropFromCtorArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromNamedArg), typeof(string), PropSources.Values.StringPropFromNamedArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromDefault), typeof(string), PropSources.Values.StringPropFromDefault),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.StringPropFromConst), typeof(string), PropSources.Values.StringPropFromConst),
+                n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.ArrayStringPropFromCtorArg), typeof(string[]), PropSources.Values.ArrayStringPropFromCtorArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.ArrayStringPropFromNamedArg), typeof(string[]), PropSources.Values.ArrayStringPropFromNamedArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.ArrayStringPropFromDefault), typeof(string[]), PropSources.Values.ArrayStringPropFromDefault),
+                n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromCtorArg), typeof(Type), PropSources.Values.TypePropFromCtorArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromNamedArg), typeof(Type), PropSources.Values.TypePropFromNamedArg),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromDefault), typeof(Type), PropSources.Values.TypePropFromDefault),
                 n => n.ShouldHaveNameTypeAndValue(nameof(PropSources.TargetAttribute.TypePropFromConst), typeof(Type), PropSources.Values.TypePropFromConst)
