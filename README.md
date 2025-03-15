@@ -5,40 +5,9 @@
 
 A Fody add-in that allows creating C# attributes composed of other attributes, thus making C#'s attributes a bit more useful.
 
-## Installation
-
-Install [Fody](https://github.com/Fody/Fody) and SurrogateAttribute.Fody to each project in which you want to _use_ surrogate attributes:
-```powershell
-Install-Package Fody
-Install-Package SurrogateAttribute.Fody
-```
-
-And make sure both dependencies have `PrivateAssets="All"` like so, because they are only needed during build:
-<!--PACKAGEREFERENCES-->
-```xml
-<PackageReference Include="Fody" Version="6.8.1" PrivateAssets="All" />
-<PackageReference Include="SurrogateAttribute.Fody" Version="0.6.6" PrivateAssets="All" />
-```
-
-A `FodyWeavers.xml` file will be added automatically to the project on rebuild. If not, create the file with the following content:
-```xml
-<Weavers>
-  <SurrogateAttribute />
-</Weavers>
-```
-
-This includes `SurrogateAttribute` Fody add-in to the IL weaving process.
-
-In case your project (most likely a library) _has no_ surrogate attribute usages but _has_ surrogate attribute implementations, you may want to install `SurrogateAttribute.Core` instead, which has the required types for implementing surrogate attributes but does not include `Fody` as a dependency:
-```powershell
-Install-Package SurrogateAttribute.Core
-```
-
-See [Samples](https://github.com/iotalambda/SurrogateAttribute.Fody/tree/main/Samples) for a working solution.
-
 ## In a nutshell
 
-Instead of having:
+Instead of having **a mess** like this:
 
 ```c#
 class Cat
@@ -51,7 +20,18 @@ class Cat
 }
 ```
 
-you can create attributes that implement `ISurrogateAttribute` and have reusable abstractions suitable to your requirements, e.g.
+You can have:
+
+```c#
+class Cat
+{
+    [RequiredWithLength(MinLength = 3)]
+    [Translation(nameof(Translations.CatName))]
+    public string Name { get; set; }
+}
+```
+
+By creating **custom attributes** that implement `ISurrogateAttribute`:
 
 ```c#
 [AttributeUsage(AttributeTargets.Property)]
@@ -82,18 +62,38 @@ class TranslationAttribute(string translationKey) : Attribute, ISurrogateAttribu
 }
 ```
 
-so `Cat` can be simplified:
+Usages of those custom attributes are **replaced** by their corresponding `TargetAttributes` at build time using IL weaving.
 
-```c#
-class Cat
-{
-    [RequiredWithLength(MinLength = 3)]
-    [Translation(nameof(Translations.CatName))]
-    public string Name { get; set; }
-}
+## Installation
+
+Install [Fody](https://github.com/Fody/Fody) and SurrogateAttribute.Fody to each project in which you want to _use_ surrogate attributes:
+```powershell
+Install-Package Fody
+Install-Package SurrogateAttribute.Fody
 ```
 
-Usages of attributes that implement `ISurrogateAttribute` are replaced by their corresponding `TargetAttributes` and then removed from the assembly at build time using IL weaving.
+And make sure both dependencies have `PrivateAssets="All"` like so, because they are only needed during build:
+<!--PACKAGEREFERENCES-->
+```xml
+<PackageReference Include="Fody" Version="6.8.1" PrivateAssets="All" />
+<PackageReference Include="SurrogateAttribute.Fody" Version="0.6.6" PrivateAssets="All" />
+```
+
+A `FodyWeavers.xml` file will be added automatically to the project on rebuild. If not, create the file with the following content:
+```xml
+<Weavers>
+  <SurrogateAttribute />
+</Weavers>
+```
+
+This includes `SurrogateAttribute` Fody add-in to the IL weaving process.
+
+In case your project (most likely a library) _has no_ surrogate attribute usages but _has_ surrogate attribute implementations, you may want to install `SurrogateAttribute.Core` instead, which has the required types for implementing surrogate attributes but does not include `Fody` as a dependency:
+```powershell
+Install-Package SurrogateAttribute.Core
+```
+
+See [Samples](https://github.com/iotalambda/SurrogateAttribute.Fody/tree/main/Samples) for a working solution.
 
 ## Supported features
 TODO
