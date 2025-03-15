@@ -14,9 +14,10 @@ Install-Package SurrogateAttribute.Fody
 ```
 
 And make sure both dependencies have `PrivateAssets="All"` like so, because they are only needed during build:
+<!--PACKAGEREFERENCES-->
 ```xml
-<PackageReference Include="Fody" Version="???" PrivateAssets="All" />
-<PackageReference Include="SurrogateAttribute.Fody" Version="???" PrivateAssets="All" />
+<PackageReference Include="Fody" Version="6.8.1" PrivateAssets="All" />
+<PackageReference Include="SurrogateAttribute.Fody" Version="0.6.6" PrivateAssets="All" />
 ```
 
 A `FodyWeavers.xml` file will be added automatically to the project on rebuild. If not, create the file with the following content:

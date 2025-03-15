@@ -21,4 +21,8 @@
     <ProjectReference Include="..\SurrogateAttribute.Core\SurrogateAttribute.Core.csproj" />
   </ItemGroup>
 
+  <Target Name="EnsureReadme" BeforeTargets="Build">
+    <Exec Command="pwsh -ExecutionPolicy Bypass -File $(SolutionDir)EnsureReadme.ps1" />
+  </Target>
+  
 </Project>
