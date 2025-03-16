@@ -732,6 +732,11 @@ namespace SurrogateAttribute.Fody
             var instrsHandled = 1;
             for (var i = newarrInstr.Next; i.Next != null; i = i.Next)
             {
+                if (i.OpCode.Code == Code.Callvirt)
+                    return (arr, instrsHandled - 1);
+                if (i.Next.OpCode.Code == Code.Newarr)
+                    return (arr, instrsHandled - 1);
+
                 instrsHandled++;
 
                 if (skip > 0)
