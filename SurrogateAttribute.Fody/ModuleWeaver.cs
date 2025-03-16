@@ -647,8 +647,17 @@ namespace SurrogateAttribute.Fody
                         // From Ctor arg
                         if (ctorDef.HasParameters && IsLdargOpCode(i.Previous.OpCode))
                         {
-                            var attrCtorArgIx = ValueFromLdargInstruction(i.Previous) - 1;
+                            int attrCtorArgIx;
+
+                            // Operand can be either ctor arg index or name.
+                            var operandStr = i.Previous.Operand?.ToString();
+                            if (operandStr != null && operandStr.Length > 0 && !char.IsDigit(operandStr[0]))
+                                attrCtorArgIx = attr.Constructor.Parameters.First(p => p.Name == operandStr).Index;
+                            else
+                                attrCtorArgIx = ValueFromLdargInstruction(i.Previous) - 1;
+
                             var attrCtorArg = attr.ConstructorArguments.ElementAt(attrCtorArgIx);
+
                             value = attrCtorArg.Value;
                             typeRef = attrCtorArg.Type;
                             return true;
