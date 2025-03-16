@@ -5,7 +5,7 @@ namespace TestAssembly.Readme;
 
 public static class Example1
 {
-    // SURROGATEATTRIBUTE_START
+    // SURROGATEATTRIBUTEEXAMPLE_START
     [AttributeUsage(AttributeTargets.Class)]
     public class ExampleSurrogateAttribute : Attribute, ISurrogateAttribute
     {
@@ -281,7 +281,7 @@ public static class Example1
             },
         ];
     }
-    // SURROGATEATTRIBUTE_END
+    // SURROGATEATTRIBUTEEXAMPLE_END
 
     [AttributeUsage(AttributeTargets.Class)]
     public class TargetAttribute : Attribute
