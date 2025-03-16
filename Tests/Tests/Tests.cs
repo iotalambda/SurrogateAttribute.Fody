@@ -1,6 +1,6 @@
+using Shared;
 using Shouldly;
 using TestAssembly;
-using Tests.Stuff;
 using Xunit.Abstractions;
 
 namespace Tests;

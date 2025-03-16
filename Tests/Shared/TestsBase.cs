@@ -1,7 +1,7 @@
 ﻿using Fody;
 using Xunit.Abstractions;
 
-namespace Tests.Stuff;
+namespace Shared;
 
 public abstract class TestsBase : IDisposable
 {

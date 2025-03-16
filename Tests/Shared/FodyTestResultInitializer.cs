@@ -1,7 +1,7 @@
 ﻿using Fody;
 using SurrogateAttribute.Fody;
 
-namespace Tests.Stuff;
+namespace Shared;
 
 public class FodyTestResultInitializer<TMarker> : IFodyTestResultInitializer
 {

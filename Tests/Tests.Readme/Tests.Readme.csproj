@@ -21,10 +21,7 @@
     <ProjectReference Include="..\..\SurrogateAttribute.Fody\SurrogateAttribute.Fody.csproj" />
     <ProjectReference Include="..\..\SurrogateAttribute\SurrogateAttribute.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
-    <ProjectReference Include="..\TestAssembly.BadAttrUsage\TestAssembly.BadAttrUsage.csproj" />
-    <ProjectReference Include="..\TestAssembly.BadCtorArgMapping\TestAssembly.BadCtorArgMapping.csproj" />
-    <ProjectReference Include="..\TestAssembly.BadPropDefaultValue\TestAssembly.BadPropDefaultValue.csproj" />
-    <ProjectReference Include="..\TestAssembly\TestAssembly.csproj" />
+    <ProjectReference Include="..\TestAssembly.Readme\TestAssembly.Readme.csproj" />
   </ItemGroup>
 
   <ItemGroup>

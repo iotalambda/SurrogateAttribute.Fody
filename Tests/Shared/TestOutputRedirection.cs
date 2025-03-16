@@ -1,9 +1,9 @@
 ﻿using System.Text;
 using Xunit.Abstractions;
 
-namespace Tests.Stuff;
+namespace Shared;
 
-internal class TestOutputRedirection : IDisposable
+public class TestOutputRedirection : IDisposable
 {
     class TestOutputWriter(ITestOutputHelper outputHelper) : TextWriter
     {

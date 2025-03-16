@@ -1,6 +1,6 @@
 ﻿using Fody;
+using Shared;
 using Shouldly;
-using Tests.Stuff;
 using Xunit.Abstractions;
 
 namespace Tests;
