@@ -95,5 +95,29 @@ Install-Package SurrogateAttribute.Core
 
 See [Samples](https://github.com/iotalambda/SurrogateAttribute.Fody/tree/main/Samples) for a working solution.
 
-## Supported features
+## Features
+
 TODO
+
+### Supported targets for surrogate attributes
+
+The following table displays what's currently supported. The support will be extended to cover all targets in the future:
+
+| `AttributeTarget` | Supported currently? |
+|:-|:-:|
+| `Assembly` | 🚫 |
+| `Module` | 🚫 |
+| `Class` | ✅ |
+| `Struct` | 🚫 |
+| `Enum` | 🚫 |
+| `Constructor` | 🚫 |
+| `Method` | 🚫 |
+| `Property` | ✅ |
+| `Field` | 🚫 |
+| `Event` | 🚫 |
+| `Interface` | ✅ |
+| `Parameter` | 🚫 |
+| `Delegate` | 🚫 |
+| `ReturnValue` | 🚫 |
+| `GenericParameter` | 🚫 |
+
