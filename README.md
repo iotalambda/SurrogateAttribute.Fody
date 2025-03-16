@@ -76,7 +76,7 @@ And make sure both dependencies have `PrivateAssets="All"` like so, because they
 <!--PACKAGEREFERENCES-->
 ```xml
 <PackageReference Include="Fody" Version="6.8.1" PrivateAssets="All" />
-<PackageReference Include="SurrogateAttribute.Fody" Version="0.6.6" PrivateAssets="All" />
+<PackageReference Include="SurrogateAttribute.Fody" Version="0.6.7" PrivateAssets="All" />
 ```
 
 A `FodyWeavers.xml` file will be added automatically to the project on rebuild. If not, create the file with the following content:
