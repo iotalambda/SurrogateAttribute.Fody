@@ -786,10 +786,18 @@ namespace SurrogateAttribute.Fody
                 // From Constant/Literal Number
                 if (IsLdcOpCodeInstr(i) && i.Next.OpCode.Code != Code.Newarr)
                 {
+                    el = ValueFromLdcInstr(i);
+
                     if (IsConvOpCodeInstr(i.Next))
                         skip += 1;
 
-                    el = ValueFromLdcInstr(i);
+                    if (i.Next.OpCode.Code == Code.Box)
+                    {
+                        skip += 1;
+                        el = Convert.ChangeType(el, Type.GetType(i.Next.Operand.ToString()));
+                    }
+                    else
+                        el = Convert.ChangeType(el, elType);
                 }
 
                 // From Constant/Literal String
