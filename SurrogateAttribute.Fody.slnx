@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Common.props" />
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="Tests/Shared/Shared.csproj" />
+    <Project Path="Tests/TestAssembly.BadAttrUsage/TestAssembly.BadAttrUsage.csproj" />
+    <Project Path="Tests/TestAssembly.BadCtorArgMapping/TestAssembly.BadCtorArgMapping.csproj" />
+    <Project Path="Tests/TestAssembly.BadPropDefaultValue/TestAssembly.BadPropDefaultValue.csproj" />
+    <Project Path="Tests/TestAssembly.Readme/TestAssembly.Readme.csproj" />
+    <Project Path="Tests/TestAssembly.RefLevel1/TestAssembly.RefLevel1.csproj" />
+    <Project Path="Tests/TestAssembly.RefLevel2/TestAssembly.RefLevel2.csproj" />
+    <Project Path="Tests/TestAssembly/TestAssembly.csproj" />
+    <Project Path="Tests/Tests.Readme/Tests.Readme.csproj" />
+    <Project Path="Tests/Tests/Tests.csproj">
+      <BuildDependency Project="Tests/TestAssembly.BadAttrUsage/TestAssembly.BadAttrUsage.csproj" />
+    </Project>
+    <Project Path="Tests/Tests2/Tests2.csproj" />
+  </Folder>
+  <Project Path="SurrogateAttribute.Core/SurrogateAttribute.Core.csproj" />
+  <Project Path="SurrogateAttribute.Fody/SurrogateAttribute.Fody.csproj" />
+  <Project Path="SurrogateAttribute/SurrogateAttribute.csproj">
+    <BuildDependency Project="SurrogateAttribute.Fody/SurrogateAttribute.Fody.csproj" />
+  </Project>
+</Solution>
